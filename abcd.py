@@ -141,15 +141,6 @@ def buscar_funcionarios_subordinados():
         if resultado:
             nome_gestor = resultado['Nome']
 
-            # Mapeamento de avaliadores para suas tabelas específicas
-            tabela_map = {
-                "Grasiele Bof": "func_zoom_grasiele",
-                "Guilherme Nunes": "func_zoom_guilherme",
-                "Lisiane P.": "func_zoom_lisiane",
-                "Lucio L.": "func_zoom_lucio",
-                "Rodrigo S.": "func_zoom_rodrigo_santos"
-            }
-
             # Obter a tabela correspondente ao avaliador
             tabela_avaliador = tabela_map.get(nome_gestor)
 
