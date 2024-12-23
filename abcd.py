@@ -1,8 +1,7 @@
+abcd.py
 import streamlit as st
-import jwt
-import urllib.parse as urlparse
 from databricks import sql
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from dotenv import load_dotenv
 import os
 import pandas as pd
@@ -12,8 +11,6 @@ DB_SERVER_HOSTNAME = os.getenv("DB_SERVER_HOSTNAME")
 DB_HTTP_PATH = os.getenv("DB_HTTP_PATH")
 DB_ACCESS_TOKEN = os.getenv("DB_ACCESS_TOKEN")
 
-secret_key = "data"
-
 # Função para conectar ao banco de dados
 def conectar_banco():
     return sql.connect(
@@ -21,34 +18,6 @@ def conectar_banco():
         http_path=DB_HTTP_PATH,
         access_token=DB_ACCESS_TOKEN
     )
-
-def verificar_token_no_banco(id_emp):
-    connection = conectar_banco()
-    cursor = connection.cursor()
-    cursor.execute(f"""
-        SELECT token, created_at
-        FROM datalake.avaliacao_abcd.tokens
-        WHERE user_id = '{id_emp}'
-        ORDER BY created_at DESC
-        LIMIT 1
-    """)
-    resultado = cursor.fetchone()
-    cursor.close()
-    connection.close()
-    
-    # Log para depuração
-    
-    if resultado:
-        token, created_at = resultado
-        
-        # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
-        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
-
-        return token_valido
-    else:
-        st.write("Nenhum token encontrado para o usuário.")
-    return False
-
 
 # Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
@@ -60,7 +29,6 @@ def buscar_colaboradores():
           Nome AS nm_employee,
           Setor AS nm_departament,
           Gestor_Direto AS nm_gestor,
-          Diretor_Gestor as nm_diretor,
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
@@ -68,12 +36,7 @@ def buscar_colaboradores():
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
-    return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'],'diretor': row['nm_diretor'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
-
-def logout():
-    st.session_state.clear()  # Limpa todo o session_state
-    st.success("Você saiu com sucesso!")
-    st.stop()
+    return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
 
 # Função para buscar o id do gestor selecionado
 def buscar_id_gestor(nome_gestor):
@@ -104,9 +67,7 @@ def buscar_funcionarios_por_gestor(nome_gestor):
     funcionarios = cursor.fetchall()
     cursor.close()
     connection.close()
-    # Retornando como um dicionário com o nome e o ID
-    return {row['nm_employee']: {'id': row['id_employee'], 'nome': row['nm_employee']} for row in funcionarios}
-
+    return {row['id_employee']: row['nm_employee'] for row in funcionarios}
 
 # Função para verificar se o funcionário já foi avaliado
 def verificar_se_foi_avaliado(id_emp):
@@ -139,7 +100,7 @@ def calcular_quarter(data):
 def listar_avaliados(conn, quarter=None):
     query = """
     SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
-           colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta, data_resposta_quarter
+           colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
     FROM datalake.avaliacao_abcd.avaliacao_abcd
     """
     
@@ -160,99 +121,40 @@ def listar_avaliados(conn, quarter=None):
     cursor.close()
     return df
 
-# Função para buscar os subordinados a partir da tabela específica do avaliador
+# Buscar colaboradores e subordinados pelo Diretor_Gestor
 def buscar_funcionarios_subordinados():
-    id_gestor = st.session_state.get('id_emp', None)
+    id_diretor = st.session_state.get('id_emp', None)
 
-    if id_gestor:
+    if id_diretor:
         connection = conectar_banco()
         cursor = connection.cursor()
 
-        # Buscar o nome do avaliador com base no id_emp logado
+        # Busca o nome do diretor logado
         cursor.execute(f"""
             SELECT Nome
             FROM datalake.silver_pny.func_zoom
-            WHERE id = {id_gestor}
+            WHERE id = {id_diretor}
         """)
         resultado = cursor.fetchone()
 
         if resultado:
-            nome_gestor = resultado['Nome']
+            nome_diretor = resultado['Nome']
 
-            # Mapeamento de avaliadores para suas tabelas específicas
-            tabela_map = {
-                "Grasiele Bof": "datalake.silver_pny.func_zoom_grasiele",
-                "Guilherme Nunes": "datalake.silver_pny.func_zoom_guilherme",
-                "Lisiane P.": "datalake.silver_pny.func_zoom_lisiane",
-                "Lucio L.": "datalake.silver_pny.func_zoom_lucio",
-                "Rodrigo S.": "datalake.silver_pny.func_zoom_rodrigo_santos"
-            }
+            # Agora busca os funcionários subordinados ao diretor logado
+            cursor.execute(f"""
+                SELECT id, Nome, Setor, Diretor_Gestor
+                FROM datalake.silver_pny.func_zoom
+                WHERE Diretor_Gestor = '{nome_diretor}'
+            """)
+            funcionarios = cursor.fetchall()
 
-            # Obter a tabela correspondente ao avaliador
-            tabela_avaliador = tabela_map.get(nome_gestor)
+            cursor.close()
+            connection.close()
 
-            if tabela_avaliador:
-                # Agora busca os funcionários da tabela específica do avaliador
-                cursor.execute(f"""
-                    SELECT id_employee, Nome
-                    FROM {tabela_avaliador}
-                """)
-                funcionarios = cursor.fetchall()
-
-                cursor.close()
-                connection.close()
-
-                # Retorna os funcionários como um dicionário
-                return {row['id_employee']: row['Nome'] for row in funcionarios}
-
-            else:
-                st.error("Tabela do avaliador não encontrada.")
-        else:
-            st.error("Gestor não encontrado.")
+            # Retorna os funcionários como um dicionário
+            return {row['id']: row['Nome'] for row in funcionarios}
 
     return {}
-
-# Função para listar os subordinados avaliados
-def listar_avaliados_subordinados(conn, quarter=None):
-    id_gestor = st.session_state.get('id_emp', None)
-    
-    if not id_gestor:
-        st.error("Erro: ID do gestor não encontrado.")
-        return pd.DataFrame()  # Retorna um DataFrame vazio para evitar falhas
-
-    # Buscar os subordinados do gestor logado
-    subordinados = buscar_funcionarios_subordinados()
-
-    if not subordinados:
-        st.write("Nenhum subordinado encontrado.")
-        return pd.DataFrame()  # Retorna um DataFrame vazio
-
-    # Gerar uma lista de IDs dos subordinados
-    ids_subordinados = tuple(subordinados.keys())
-
-    query = f"""
-    SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
-        colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
-    FROM datalake.avaliacao_abcd.avaliacao_abcd
-    WHERE id_emp IN {ids_subordinados}
-    """
-
-    cursor = conn.cursor()
-    cursor.execute(query)
-    resultados = cursor.fetchall()
-    colunas = [desc[0] for desc in cursor.description]
-    df = pd.DataFrame(resultados, columns=colunas)
-    
-    # Calculando o Quarter com base na data de resposta
-    df['data_resposta'] = pd.to_datetime(df['data_resposta'])
-    df['quarter'] = df['data_resposta'].apply(calcular_quarter)
-    
-    # Filtrando por Quarter se for especificado
-    if quarter and quarter != "Todos":
-        df = df[df['quarter'] == quarter]
-
-    cursor.close()
-    return df
 
 
 def abcd_page():
@@ -260,10 +162,6 @@ def abcd_page():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         st.error("Você precisa fazer login para acessar essa página.")
         return
-    
-    with st.sidebar:
-        if st.button("Sair"):
-            logout()
 
     st.title("Avaliação ABCD")
     # Aplicando CSS para aumentar a largura da página e expandir elementos
@@ -348,11 +246,11 @@ def abcd_page():
 
     # Simulação de descrições para a categoria técnica
     descricoes_tecnico = {
-        "A": "Excelente",
-        "B+": "Muito Bom",
-        "B": "Bom",
-        "C": "Médio",
-        "D": "Ruim"
+        "A": "Descrição A para Conhecimento Técnico",
+        "B+": "Descrição B+ para Conhecimento Técnico",
+        "B": "Descrição B para Conhecimento Técnico",
+        "C": "Descrição C para Conhecimento Técnico",
+        "D": "Descrição D para Conhecimento Técnico"
     }
 
     # Função para calcular a nota final
@@ -377,18 +275,13 @@ def abcd_page():
         try:
             connection = conectar_banco()
             cursor = connection.cursor()
-
-            # Calcula a data_resposta_quarter (10 dias antes)
-            data_resposta_quarter = data_resposta - timedelta(days=10)
-
-            # Insere a avaliação com a data ajustada e a data original
             cursor.execute(f"""
                 INSERT INTO datalake.avaliacao_abcd.avaliacao_abcd (
-                    id_emp, nome_colaborador, nome_gestor, setor, diretoria, data_resposta, data_resposta_quarter, nota, soma_final,
+                    id_emp, nome_colaborador, nome_gestor, setor, diretoria, data_resposta, nota, soma_final,
                     colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico
                 )
                 VALUES (
-                    '{id_emp}', '{nome_colaborador}', '{nome_gestor}', '{setor}', '{diretoria}', '{data_resposta}', '{data_resposta_quarter}', '{nota_final}', '{soma_final}',
+                    '{id_emp}', '{nome_colaborador}', '{nome_gestor}', '{setor}', '{diretoria}', '{data_resposta}', '{nota_final}', '{soma_final}',
                     '{notas_categorias["colaboracao"]}', '{notas_categorias["inteligencia_emocional"]}', '{notas_categorias["responsabilidade"]}',
                     '{notas_categorias["iniciativa_proatividade"]}', '{notas_categorias["flexibilidade"]}', '{notas_categorias["conhecimento_tecnico"]}'
                 )
@@ -409,7 +302,7 @@ def abcd_page():
 
     st.header("Preencha as informações abaixo:")
 
-        # Buscar colaboradores e subordinados
+    # Buscar colaboradores e subordinados
     colaboradores_data = buscar_colaboradores()
     subordinados_data = buscar_funcionarios_subordinados()
 
@@ -417,7 +310,6 @@ def abcd_page():
     cols_inputs = st.columns(2)
 
     with cols_inputs[0]:
-        # Campo para selecionar o colaborador
         nome_colaborador = st.selectbox("Nome do Colaborador", options=[""] + list(colaboradores_data.keys()))
         if nome_colaborador:
             id_emp = colaboradores_data[nome_colaborador]['id']
@@ -425,30 +317,20 @@ def abcd_page():
             id_emp = None
 
     with cols_inputs[1]:
-        # Campo para mostrar o nome do gestor direto
-        nome_gestor = st.text_input("Líder Direto", value=colaboradores_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
+        nome_gestor = st.text_input("Nome do Gestor", value=colaboradores_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
 
     cols_inputs2 = st.columns(2)
 
     with cols_inputs2[0]:
-        # Campo para mostrar o setor
         setor = st.selectbox("Setor", options=[colaboradores_data[nome_colaborador]['departament']] if nome_colaborador else [""])
 
     with cols_inputs2[1]:
-        # Campo para mostrar a diretoria
         diretoria = st.text_input("Diretoria", value=colaboradores_data[nome_colaborador]['diretoria'] if nome_colaborador else "", disabled=True)
-
-    # Adicionando o campo "Diretor Responsável"
-    cols_inputs3 = st.columns(1)
-    with cols_inputs3[0]:
-        nome_diretor = st.text_input("Diretor Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
 
     cols_date = st.columns([1, 3])
 
     with cols_date[0]:
-        # Campo para selecionar a data de resposta
         data_resposta = st.date_input("Data da Resposta", value=datetime.today(), format="DD-MM-YYYY")
-
 
     # Verifica se o colaborador selecionado é subordinado do gestor logado
     if nome_colaborador and id_emp in subordinados_data:
@@ -552,10 +434,10 @@ def abcd_page():
                 st.write("Todos os funcionários já foram avaliados.")
         else:
             st.write("Nenhum subordinado encontrado.")
-        
 
     # Função para listar avaliações já realizadas e incluir a coluna de Quarter
     def listar_avaliados_subordinados(conn, quarter=None):
+    # Obter o ID do gestor logado
         id_gestor = st.session_state.get('id_emp', None)
         
         if not id_gestor:
@@ -573,8 +455,8 @@ def abcd_page():
         ids_subordinados = tuple(subordinados.keys())
 
         query = f"""
-        SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota as nota_final, 
-            colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta, data_resposta_quarter
+        SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
+            colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
         FROM datalake.avaliacao_abcd.avaliacao_abcd
         WHERE id_emp IN {ids_subordinados}
         """
@@ -586,8 +468,8 @@ def abcd_page():
         df = pd.DataFrame(resultados, columns=colunas)
         
         # Calculando o Quarter com base na data de resposta
-        df['data_resposta_quarter'] = pd.to_datetime(df['data_resposta_quarter'])
-        df['quarter'] = df['data_resposta_quarter'].apply(calcular_quarter)
+        df['data_resposta'] = pd.to_datetime(df['data_resposta'])
+        df['quarter'] = df['data_resposta'].apply(calcular_quarter)
         
         # Filtrando por Quarter se for especificado
         if quarter and quarter != "Todos":
@@ -595,8 +477,6 @@ def abcd_page():
 
         cursor.close()
         return df
-    
-    
 
     # Seção da página que lista as avaliações realizadas
     st.subheader("Avaliações Realizadas")
@@ -620,25 +500,3 @@ def abcd_page():
         conn.close()
     else:
         st.error("Não foi possível conectar ao banco de dados.")
-
-    # Obter o `id_emp` diretamente dos parâmetros da URL
-    query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
-    id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
-
-    #query_params = st.query_params
-    #id_emp = query_params.get("user_id", [None])[0]
-
-    # Verifique se o usuário está logado e se o token é válido
-    if id_emp:
-        if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
-            st.session_state['logged_in'] = True  # Defina o usuário como logado
-            st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
-
-            
-            # Renderizar a página `abcd_page` se o token for válido
-            abcd_page()  # Chama a função abcd_page diretamente após a validação
-
-        else:
-            st.error("Acesso negado: token inválido ou expirado.")
-    else:
-        st.error("ID de usuário não encontrado.")
