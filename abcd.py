@@ -327,7 +327,7 @@ def abcd_page():
             id_emp = None
 
     with cols_inputs[1]:
-        nome_gestor = st.text_input("Nome do Gestor", value=colaboradores_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
+    nome_gestor = st.text_input("Nome do Diretor", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
 
     cols_inputs2 = st.columns(2)
 
