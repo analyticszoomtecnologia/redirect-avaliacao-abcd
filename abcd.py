@@ -104,9 +104,7 @@ def buscar_funcionarios_por_gestor(nome_gestor):
     funcionarios = cursor.fetchall()
     cursor.close()
     connection.close()
-    # Retornando como um dicionário com o nome e o ID
-    return {row['nm_employee']: {'id': row['id_employee'], 'nome': row['nm_employee']} for row in funcionarios}
-
+    return {row['id_employee']: row['nm_employee'] for row in funcionarios}
 
 # Função para verificar se o funcionário já foi avaliado
 def verificar_se_foi_avaliado(id_emp):
@@ -190,11 +188,10 @@ def buscar_funcionarios_subordinados():
             cursor.close()
             connection.close()
 
-            # Retorna os funcionários como um dicionário com ID e nome
-            return {row['nm_employee']: {'id': row['id'], 'nome': row['nm_employee']} for row in funcionarios}
+            # Retorna os funcionários como um dicionário
+            return {row['id']: row['Nome'] for row in funcionarios}
 
     return {}
-
 
 # Função para listar os subordinados avaliados
 def listar_avaliados_subordinados(conn, quarter=None):
@@ -394,38 +391,39 @@ def abcd_page():
     st.header("Preencha as informações abaixo:")
 
     # Buscar colaboradores e subordinados
-    #colaboradores_data = buscar_colaboradores()
+    colaboradores_data = buscar_colaboradores()
     subordinados_data = buscar_funcionarios_subordinados()
 
     # Inputs de informações do colaborador
     cols_inputs = st.columns(2)
 
     with cols_inputs[0]:
-        nome_colaborador = st.selectbox("Nome do Colaborador", options=[""] + list(subordinados_data.keys()))
+        nome_colaborador = st.selectbox("Nome do Colaborador", options=[""] + list(colaboradores_data.keys()))
         if nome_colaborador:
-            id_emp = subordinados_data[nome_colaborador]['id']
+            id_emp = colaboradores_data[nome_colaborador]['id']
         else:
             id_emp = None
 
     with cols_inputs[1]:
-        nome_gestor = st.text_input("Líder Direto", value=subordinados_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
+        nome_gestor = st.text_input("Líder Direto", value=colaboradores_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
 
     cols_inputs2 = st.columns(2)
 
     with cols_inputs2[0]:
-        setor = st.selectbox("Setor", options=[subordinados_data[nome_colaborador]['departament']] if nome_colaborador else [""])
+        setor = st.selectbox("Setor", options=[colaboradores_data[nome_colaborador]['departament']] if nome_colaborador else [""])
 
     with cols_inputs2[1]:
-        diretoria = st.text_input("Diretoria", value=subordinados_data[nome_colaborador]['diretoria'] if nome_colaborador else "", disabled=True)
+        diretoria = st.text_input("Diretoria", value=colaboradores_data[nome_colaborador]['diretoria'] if nome_colaborador else "", disabled=True)
 
     # Adicionando o campo do Diretor para exibir na tela
     with cols_inputs2[0]:
-        nome_diretor = st.text_input("Diretor Responsável", value=subordinados_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
+        nome_diretor = st.text_input("Diretor Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
 
     cols_date = st.columns([1, 3])
 
     with cols_date[0]:
         data_resposta = st.date_input("Data da Resposta", value=datetime.today(), format="DD-MM-YYYY")
+    
 
     # Verifica se o colaborador selecionado é subordinado do gestor logado
     if nome_colaborador and id_emp in subordinados_data:
