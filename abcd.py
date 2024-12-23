@@ -64,8 +64,6 @@ def buscar_colaboradores():
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
-        WHERE
-          Gestor_Direto = '{nome_gestor}'
     """)
     colaboradores = cursor.fetchall()
     cursor.close()
