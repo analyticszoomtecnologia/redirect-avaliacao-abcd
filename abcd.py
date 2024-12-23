@@ -448,46 +448,54 @@ def abcd_page():
 
     # Função para listar avaliações já realizadas e incluir a coluna de Quarter
     def listar_avaliados_subordinados(conn, quarter=None):
-    # Obter o ID do gestor logado
-        id_gestor = st.session_state.get('id_emp', None)
-        
-        if not id_gestor:
-            st.error("Erro: ID do gestor não encontrado.")
-            return pd.DataFrame()  # Retorna um DataFrame vazio para evitar falhas
+    # Obter o ID do diretor logado
+    id_diretor = st.session_state.get('id_emp', None)
 
-        # Buscar os subordinados do gestor logado
-        subordinados = buscar_funcionarios_subordinados()
+    if not id_diretor:
+        st.error("Erro: ID do diretor não encontrado.")
+        return pd.DataFrame()  # Retorna um DataFrame vazio para evitar falhas
 
-        if not subordinados:
-            st.write("Nenhum subordinado encontrado.")
-            return pd.DataFrame()  # Retorna um DataFrame vazio
+    # Buscar o nome do diretor logado
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        SELECT Nome
+        FROM datalake.silver_pny.func_zoom
+        WHERE id = {id_diretor}
+    """)
+    resultado = cursor.fetchone()
+    if resultado:
+        nome_diretor = resultado['Nome']
+    else:
+        st.error("Diretor não encontrado no banco de dados.")
+        return pd.DataFrame()  # Retorna um DataFrame vazio
 
-        # Gerar uma lista de IDs dos subordinados
-        ids_subordinados = tuple(subordinados.keys())
+    # Buscar todos os funcionários subordinados ao diretor logado
+    query = f"""
+    SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
+        colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
+    FROM datalake.avaliacao_abcd.avaliacao_abcd
+    WHERE id_emp IN (
+        SELECT id
+        FROM datalake.silver_pny.func_zoom
+        WHERE Diretor_Gestor = '{nome_diretor}'
+    )
+    """
 
-        query = f"""
-        SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
-            colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
-        FROM datalake.avaliacao_abcd.avaliacao_abcd
-        WHERE id_emp IN {ids_subordinados}
-        """
+    # Se for especificado um quarter, filtrar por ele
+    if quarter and quarter != "Todos":
+        query += f" AND DATE_PART('quarter', data_resposta) = '{quarter[-1]}'"
 
-        cursor = conn.cursor()
-        cursor.execute(query)
-        resultados = cursor.fetchall()
-        colunas = [desc[0] for desc in cursor.description]
-        df = pd.DataFrame(resultados, columns=colunas)
-        
-        # Calculando o Quarter com base na data de resposta
-        df['data_resposta'] = pd.to_datetime(df['data_resposta'])
-        df['quarter'] = df['data_resposta'].apply(calcular_quarter)
-        
-        # Filtrando por Quarter se for especificado
-        if quarter and quarter != "Todos":
-            df = df[df['quarter'] == quarter]
+    cursor.execute(query)
+    resultados = cursor.fetchall()
+    colunas = [desc[0] for desc in cursor.description]
+    df = pd.DataFrame(resultados, columns=colunas)
 
-        cursor.close()
-        return df
+    # Calculando o Quarter com base na data de resposta
+    df['data_resposta'] = pd.to_datetime(df['data_resposta'])
+    df['quarter'] = df['data_resposta'].apply(calcular_quarter)
+
+    cursor.close()
+    return df
 
     # Seção da página que lista as avaliações realizadas
     st.subheader("Avaliações Realizadas")
