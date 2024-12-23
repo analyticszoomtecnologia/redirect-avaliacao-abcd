@@ -64,6 +64,8 @@ def buscar_colaboradores():
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
+        WHERE
+          Gestor_Direto = '{nome_gestor}'
     """)
     colaboradores = cursor.fetchall()
     cursor.close()
@@ -391,8 +393,7 @@ def abcd_page():
     st.header("Preencha as informações abaixo:")
 
     # Buscar colaboradores e subordinados
-    #colaboradores_data = buscar_colaboradores()
-    colaboradores_data = buscar_funcionarios_subordinados()
+    colaboradores_data = buscar_colaboradores()
     subordinados_data = buscar_funcionarios_subordinados()
 
     # Inputs de informações do colaborador
