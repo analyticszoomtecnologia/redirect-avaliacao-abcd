@@ -1,4 +1,3 @@
-abcd.py
 import streamlit as st
 from databricks import sql
 from datetime import datetime
