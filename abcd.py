@@ -104,7 +104,9 @@ def buscar_funcionarios_por_gestor(nome_gestor):
     funcionarios = cursor.fetchall()
     cursor.close()
     connection.close()
-    return {row['id_employee']: row['nm_employee'] for row in funcionarios}
+    # Retornando como um dicionário com o nome e o ID
+    return {row['nm_employee']: {'id': row['id_employee'], 'nome': row['nm_employee']} for row in funcionarios}
+
 
 # Função para verificar se o funcionário já foi avaliado
 def verificar_se_foi_avaliado(id_emp):
@@ -158,7 +160,7 @@ def listar_avaliados(conn, quarter=None):
     cursor.close()
     return df
 
-# Função para buscar os subordinados do gestor ou diretor logado
+# Função para buscar os subordinados a partir da tabela específica do avaliador
 def buscar_funcionarios_subordinados():
     id_gestor = st.session_state.get('id_emp', None)
 
@@ -166,7 +168,7 @@ def buscar_funcionarios_subordinados():
         connection = conectar_banco()
         cursor = connection.cursor()
 
-        # Busca o nome do gestor com base no id_emp logado
+        # Buscar o nome do avaliador com base no id_emp logado
         cursor.execute(f"""
             SELECT Nome
             FROM datalake.silver_pny.func_zoom
@@ -175,13 +177,13 @@ def buscar_funcionarios_subordinados():
         resultado = cursor.fetchone()
 
         if resultado:
-            nome_gestor = resultado['Nome']
+            nome_gestor = resultado['Nome'].replace(" ", "_").lower()  # Substituir espaços por underline e deixar em minúsculas para nome da tabela
+            tabela_avaliador = f"tabela_{nome_gestor}"  # Nome da tabela baseado no avaliador
 
-            # Busca os funcionários subordinados diretos
+            # Agora busca os funcionários da tabela específica do avaliador
             cursor.execute(f"""
-                SELECT id, Nome, Setor, Gestor_Direto
-                FROM datalake.silver_pny.func_zoom
-                WHERE Gestor_Direto = '{nome_gestor}' OR Diretor_Gestor = '{nome_gestor}'
+                SELECT id_employee, Nome
+                FROM {tabela_avaliador}
             """)
             funcionarios = cursor.fetchall()
 
@@ -189,9 +191,10 @@ def buscar_funcionarios_subordinados():
             connection.close()
 
             # Retorna os funcionários como um dicionário
-            return {row['id']: row['Nome'] for row in funcionarios}
+            return {row['id_employee']: row['Nome'] for row in funcionarios}
 
     return {}
+
 
 # Função para listar os subordinados avaliados
 def listar_avaliados_subordinados(conn, quarter=None):
@@ -225,8 +228,8 @@ def listar_avaliados_subordinados(conn, quarter=None):
     df = pd.DataFrame(resultados, columns=colunas)
     
     # Calculando o Quarter com base na data de resposta
-    df['data_resposta_quarter'] = pd.to_datetime(df['data_resposta_quarter'])
-    df['quarter'] = df['data_resposta_quarter'].apply(calcular_quarter)
+    df['data_resposta'] = pd.to_datetime(df['data_resposta'])
+    df['quarter'] = df['data_resposta'].apply(calcular_quarter)
     
     # Filtrando por Quarter se for especificado
     if quarter and quarter != "Todos":
@@ -390,7 +393,7 @@ def abcd_page():
 
     st.header("Preencha as informações abaixo:")
 
-    # Buscar colaboradores e subordinados
+        # Buscar colaboradores e subordinados
     colaboradores_data = buscar_colaboradores()
     subordinados_data = buscar_funcionarios_subordinados()
 
@@ -398,6 +401,7 @@ def abcd_page():
     cols_inputs = st.columns(2)
 
     with cols_inputs[0]:
+        # Campo para selecionar o colaborador
         nome_colaborador = st.selectbox("Nome do Colaborador", options=[""] + list(colaboradores_data.keys()))
         if nome_colaborador:
             id_emp = colaboradores_data[nome_colaborador]['id']
@@ -405,25 +409,30 @@ def abcd_page():
             id_emp = None
 
     with cols_inputs[1]:
+        # Campo para mostrar o nome do gestor direto
         nome_gestor = st.text_input("Líder Direto", value=colaboradores_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
 
     cols_inputs2 = st.columns(2)
 
     with cols_inputs2[0]:
+        # Campo para mostrar o setor
         setor = st.selectbox("Setor", options=[colaboradores_data[nome_colaborador]['departament']] if nome_colaborador else [""])
 
     with cols_inputs2[1]:
+        # Campo para mostrar a diretoria
         diretoria = st.text_input("Diretoria", value=colaboradores_data[nome_colaborador]['diretoria'] if nome_colaborador else "", disabled=True)
 
-    # Adicionando o campo do Diretor para exibir na tela
-    with cols_inputs2[0]:
+    # Adicionando o campo "Diretor Responsável"
+    cols_inputs3 = st.columns(1)
+    with cols_inputs3[0]:
         nome_diretor = st.text_input("Diretor Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
 
     cols_date = st.columns([1, 3])
 
     with cols_date[0]:
+        # Campo para selecionar a data de resposta
         data_resposta = st.date_input("Data da Resposta", value=datetime.today(), format="DD-MM-YYYY")
-    
+
 
     # Verifica se o colaborador selecionado é subordinado do gestor logado
     if nome_colaborador and id_emp in subordinados_data:
