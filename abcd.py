@@ -391,7 +391,8 @@ def abcd_page():
     st.header("Preencha as informações abaixo:")
 
     # Buscar colaboradores e subordinados
-    colaboradores_data = buscar_colaboradores()
+    #colaboradores_data = buscar_colaboradores()
+    colaboradores_data = buscar_funcionarios_subordinados()
     subordinados_data = buscar_funcionarios_subordinados()
 
     # Inputs de informações do colaborador
