@@ -181,11 +181,11 @@ def buscar_funcionarios_subordinados():
 
             # Mapeamento de avaliadores para suas tabelas específicas
             tabela_map = {
-                "Grasiele Bof": "func_zoom_grasiele",
-                "Guilherme Nunes": "func_zoom_guilherme",
-                "Lisiane P.": "func_zoom_lisiane",
-                "Lucio L.": "func_zoom_lucio",
-                "Rodrigo S.": "func_zoom_rodrigo_santos"
+                "Grasiele Bof": "datalake.silver_pny.func_zoom_grasiele",
+                "Guilherme Nunes": "datalake.silver_pny.func_zoom_guilherme",
+                "Lisiane P.": "datalake.silver_pny.func_zoom_lisiane",
+                "Lucio L.": "datalake.silver_pny.func_zoom_lucio",
+                "Rodrigo S.": "datalake.silver_pny.func_zoom_rodrigo_santos"
             }
 
             # Obter a tabela correspondente ao avaliador
@@ -621,24 +621,24 @@ def abcd_page():
     else:
         st.error("Não foi possível conectar ao banco de dados.")
 
-# Obter o `id_emp` diretamente dos parâmetros da URL
-query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
-id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
+    # Obter o `id_emp` diretamente dos parâmetros da URL
+    query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
+    id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
 
-#query_params = st.query_params
-#id_emp = query_params.get("user_id", [None])[0]
+    #query_params = st.query_params
+    #id_emp = query_params.get("user_id", [None])[0]
 
-# Verifique se o usuário está logado e se o token é válido
-if id_emp:
-    if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
-        st.session_state['logged_in'] = True  # Defina o usuário como logado
-        st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
+    # Verifique se o usuário está logado e se o token é válido
+    if id_emp:
+        if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
+            st.session_state['logged_in'] = True  # Defina o usuário como logado
+            st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
 
-        
-        # Renderizar a página `abcd_page` se o token for válido
-        abcd_page()  # Chama a função abcd_page diretamente após a validação
+            
+            # Renderizar a página `abcd_page` se o token for válido
+            abcd_page()  # Chama a função abcd_page diretamente após a validação
 
+        else:
+            st.error("Acesso negado: token inválido ou expirado.")
     else:
-        st.error("Acesso negado: token inválido ou expirado.")
-else:
-    st.error("ID de usuário não encontrado.")
+        st.error("ID de usuário não encontrado.")
