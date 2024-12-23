@@ -38,6 +38,12 @@ def buscar_colaboradores():
     connection.close()
     return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
 
+
+def logout():
+    st.session_state.clear()  # Limpa todo o session_state
+    st.success("Você saiu com sucesso!")
+    st.stop()
+
 # Função para buscar o id do gestor selecionado
 def buscar_id_gestor(nome_gestor):
     connection = conectar_banco()
@@ -162,6 +168,10 @@ def abcd_page():
     if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
         st.error("Você precisa fazer login para acessar essa página.")
         return
+    
+    with st.sidebar:
+        if st.button("Sair"):
+            logout()
 
     st.title("Avaliação ABCD")
     # Aplicando CSS para aumentar a largura da página e expandir elementos
