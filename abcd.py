@@ -139,23 +139,41 @@ def buscar_funcionarios_subordinados():
         resultado = cursor.fetchone()
 
         if resultado:
-            nome_gestor = resultado['Nome'].replace(" ", "_").lower()  # Substituir espaços por underline e deixar em minúsculas para nome da tabela
-            tabela_avaliador = f"tabela_{nome_gestor}"  # Nome da tabela baseado no avaliador
+            nome_gestor = resultado['Nome']
 
-            # Agora busca os funcionários da tabela específica do avaliador
-            cursor.execute(f"""
-                SELECT id_employee, Nome
-                FROM {tabela_avaliador}
-            """)
-            funcionarios = cursor.fetchall()
+            # Mapeamento de avaliadores para suas tabelas específicas
+            tabela_map = {
+                "Grasiele Bof": "func_zoom_grasiele",
+                "Guilherme Nunes": "func_zoom_guilherme",
+                "Lisiane P.": "func_zoom_lisiane",
+                "Lucio L.": "func_zoom_lucio",
+                "Rodrigo S.": "func_zoom_rodrigo_santos"
+            }
 
-            cursor.close()
-            connection.close()
+            # Obter a tabela correspondente ao avaliador
+            tabela_avaliador = tabela_map.get(nome_gestor)
 
-            # Retorna os funcionários como um dicionário
-            return {row['id_employee']: row['Nome'] for row in funcionarios}
+            if tabela_avaliador:
+                # Agora busca os funcionários da tabela específica do avaliador
+                cursor.execute(f"""
+                    SELECT id_employee, Nome
+                    FROM {tabela_avaliador}
+                """)
+                funcionarios = cursor.fetchall()
+
+                cursor.close()
+                connection.close()
+
+                # Retorna os funcionários como um dicionário
+                return {row['id_employee']: row['Nome'] for row in funcionarios}
+
+            else:
+                st.error("Tabela do avaliador não encontrada.")
+        else:
+            st.error("Gestor não encontrado.")
 
     return {}
+
 
 def abcd_page():
     # Verifica se o usuário está logado
