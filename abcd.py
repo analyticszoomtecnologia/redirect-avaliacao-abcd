@@ -309,26 +309,36 @@ def abcd_page():
     cols_inputs = st.columns(2)
 
     with cols_inputs[0]:
+        # Campo para selecionar o colaborador
         nome_colaborador = st.selectbox("Nome do Colaborador", options=[""] + list(colaboradores_data.keys()))
         if nome_colaborador:
             id_emp = colaboradores_data[nome_colaborador]['id']
         else:
             id_emp = None
-
+    
     with cols_inputs[1]:
-        nome_gestor = st.text_input("Nome do Gestor", value=colaboradores_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
-
+        # Campo para mostrar o nome do gestor direto
+        nome_gestor = st.text_input("Líder Direto", value=colaboradores_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
+    
     cols_inputs2 = st.columns(2)
-
+    
     with cols_inputs2[0]:
+        # Campo para mostrar o setor
         setor = st.selectbox("Setor", options=[colaboradores_data[nome_colaborador]['departament']] if nome_colaborador else [""])
-
+    
     with cols_inputs2[1]:
+        # Campo para mostrar a diretoria
         diretoria = st.text_input("Diretoria", value=colaboradores_data[nome_colaborador]['diretoria'] if nome_colaborador else "", disabled=True)
-
+    
+    # Adicionando o campo "Diretor Responsável"
+    cols_inputs3 = st.columns(1)
+    with cols_inputs3[0]:
+        nome_diretor = st.text_input("Diretor Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
+    
     cols_date = st.columns([1, 3])
-
+    
     with cols_date[0]:
+        # Campo para selecionar a data de resposta
         data_resposta = st.date_input("Data da Resposta", value=datetime.today(), format="DD-MM-YYYY")
 
     # Verifica se o colaborador selecionado é subordinado do gestor logado
