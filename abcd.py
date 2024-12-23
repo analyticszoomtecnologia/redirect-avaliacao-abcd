@@ -104,7 +104,9 @@ def buscar_funcionarios_por_gestor(nome_gestor):
     funcionarios = cursor.fetchall()
     cursor.close()
     connection.close()
-    return {row['id_employee']: row['nm_employee'] for row in funcionarios}
+    # Retornando como um dicionário com o nome e o ID
+    return {row['nm_employee']: {'id': row['id_employee'], 'nome': row['nm_employee']} for row in funcionarios}
+
 
 # Função para verificar se o funcionário já foi avaliado
 def verificar_se_foi_avaliado(id_emp):
@@ -188,10 +190,11 @@ def buscar_funcionarios_subordinados():
             cursor.close()
             connection.close()
 
-            # Retorna os funcionários como um dicionário
-            return {row['id']: row['Nome'] for row in funcionarios}
+            # Retorna os funcionários como um dicionário com ID e nome
+            return {row['nm_employee']: {'id': row['id'], 'nome': row['nm_employee']} for row in funcionarios}
 
     return {}
+
 
 # Função para listar os subordinados avaliados
 def listar_avaliados_subordinados(conn, quarter=None):
@@ -390,7 +393,7 @@ def abcd_page():
 
     st.header("Preencha as informações abaixo:")
 
-        # Buscar colaboradores e subordinados
+    # Buscar colaboradores e subordinados
     #colaboradores_data = buscar_colaboradores()
     subordinados_data = buscar_funcionarios_subordinados()
 
