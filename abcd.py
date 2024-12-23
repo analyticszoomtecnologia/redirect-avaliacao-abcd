@@ -621,24 +621,19 @@ def abcd_page():
     else:
         st.error("Não foi possível conectar ao banco de dados.")
 
-# Obter o `id_emp` diretamente dos parâmetros da URL
-query_params = st.query_params()  # Garantir que estamos pegando o ID direto da URL
-id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
+        # Obter o `id_emp` diretamente dos parâmetros da URL
+        query_params = st.query_params  # Acessa o objeto de parâmetros diretamente
+        id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
 
-#query_params = st.query_params
-#id_emp = query_params.get("user_id", [None])[0]
+        # Verifique se o usuário está logado e se o token é válido
+        if id_emp:
+            if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
+                st.session_state['logged_in'] = True  # Define o usuário como logado
+                st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
 
-# Verifique se o usuário está logado e se o token é válido
-if id_emp:
-    if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
-        st.session_state['logged_in'] = True  # Defina o usuário como logado
-        st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
-
-        
-        # Renderizar a página `abcd_page` se o token for válido
-        abcd_page()  # Chama a função abcd_page diretamente após a validação
-
-    else:
-        st.error("Acesso negado: token inválido ou expirado.")
-else:
-    st.error("ID de usuário não encontrado.")
+                # Renderizar a página `abcd_page` se o token for válido
+                abcd_page()  # Chama a função abcd_page diretamente após a validação
+            else:
+                st.error("Acesso negado: token inválido ou expirado.")
+        else:
+            st.error("ID de usuário não encontrado.")
