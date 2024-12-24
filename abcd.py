@@ -23,6 +23,7 @@ def conectar_banco():
     )
 
 def verificar_token_no_banco(id_emp):
+    # Conectar ao banco para buscar o token mais recente
     connection = conectar_banco()
     cursor = connection.cursor()
     cursor.execute(f"""
@@ -35,20 +36,29 @@ def verificar_token_no_banco(id_emp):
     resultado = cursor.fetchone()
     cursor.close()
     connection.close()
-    
-    # Log para depuração
-    
+
     if resultado:
         token, created_at = resultado
-        
-        # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
-        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
 
-        return token_valido
+        # Calcula o tempo limite do token (1 hora a partir do created_at)
+        exp_datetime = created_at + timedelta(hours=1)
+
+        # Verifica se o token está dentro da validade
+        if exp_datetime > datetime.now(timezone.utc):
+            try:
+                # Decodifica o token para verificar integridade
+                decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
+                return True
+            except jwt.ExpiredSignatureError:
+                st.write("Erro: A assinatura do token expirou.")
+            except jwt.InvalidTokenError as e:
+                st.write(f"Erro: Token inválido. Detalhes: {str(e)}")
+        else:
+            st.write("Erro: Token expirado.")
     else:
         st.write("Nenhum token encontrado para o usuário.")
+    
     return False
-
 
 # Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
