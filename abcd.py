@@ -40,25 +40,33 @@ def verificar_token_no_banco(id_emp):
     if resultado:
         token, created_at = resultado
 
+        # Log dos valores
+        st.write(f"Token encontrado: {token}")
+        st.write(f"Data de criação (UTC): {created_at}")
+        st.write(f"Hora atual (UTC): {datetime.now(timezone.utc)}")
+
         # Calcula o tempo limite do token (1 hora a partir do created_at)
         exp_datetime = created_at + timedelta(hours=1)
+        st.write(f"Data de expiração calculada: {exp_datetime}")
 
         # Verifica se o token está dentro da validade
         if exp_datetime > datetime.now(timezone.utc):
             try:
                 # Decodifica o token para verificar integridade
                 decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
+                st.write(f"Payload do token: {decoded}")
                 return True
             except jwt.ExpiredSignatureError:
-                st.write("Erro: A assinatura do token expirou.")
+                st.error("Erro: A assinatura do token expirou.")
             except jwt.InvalidTokenError as e:
-                st.write(f"Erro: Token inválido. Detalhes: {str(e)}")
+                st.error(f"Erro: Token inválido. Detalhes: {str(e)}")
         else:
-            st.write("Erro: Token expirado.")
+            st.error("Erro: Token expirado.")
     else:
-        st.write("Nenhum token encontrado para o usuário.")
+        st.error("Nenhum token encontrado para o usuário.")
     
     return False
+
 
 # Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
