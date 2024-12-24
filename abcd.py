@@ -614,17 +614,3 @@ if id_emp:
         st.error("Acesso negado: token inválido ou expirado.")
 else:
     st.error("ID de usuário não encontrado.")
-
-st.markdown(
-        """
-        <br><hr>
-        <div style='text-align: center;'>
-            Desenvolvido por 
-            <a href='https://www.linkedin.com/in/gabriel-cordeiro-033641144/' target='_blank' style='text-decoration: none; color: #0A66C2;'>
-                Gabriel Cordeiro
-                <img src='https://upload.wikimedia.org/wikipedia/commons/f/f8/LinkedIn_icon_circle.svg' alt='LinkedIn' width='20' style='vertical-align: middle; margin-right: 5px;' />
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
