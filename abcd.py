@@ -217,9 +217,9 @@ def buscar_funcionarios_subordinados():
 
 # Função para listar os subordinados avaliados
 def listar_avaliados_subordinados(conn, quarter=None):
-    id_gestor = st.session_state.get('id_emp', None)
+    id_diretor = st.session_state.get('id_emp', None)
     
-    if not id_gestor:
+    if not id_diretor:
         st.error("Erro: ID do gestor não encontrado.")
         return pd.DataFrame()  # Retorna um DataFrame vazio para evitar falhas
 
@@ -553,9 +553,9 @@ def abcd_page():
 
     # Função para listar avaliações já realizadas e incluir a coluna de Quarter
     def listar_avaliados_subordinados(conn, quarter=None):
-        id_gestor = st.session_state.get('id_emp', None)
+        id_diretor = st.session_state.get('id_emp', None)
         
-        if not id_gestor:
+        if not id_diretor:
             st.error("Erro: ID do gestor não encontrado.")
             return pd.DataFrame()  # Retorna um DataFrame vazio para evitar falhas
 
