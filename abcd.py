@@ -52,45 +52,23 @@ def verificar_token_no_banco(id_emp):
 
 # Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
-    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
-
-    if not id_diretor:
-        st.error("Erro: ID do diretor não encontrado.")
-        return {}
-
     connection = conectar_banco()
     cursor = connection.cursor()
-
-    # Consulta para obter os colaboradores cujo id_avaliador seja igual ao id_emp do diretor logado
-    cursor.execute(f"""
+    cursor.execute("""
         SELECT
           id AS id_employee,
           Nome AS nm_employee,
           Setor AS nm_departament,
           Gestor_Direto AS nm_gestor,
-          Diretor_Gestor AS nm_diretor,
+          Diretor_Gestor as nm_diretor,
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
-        WHERE id_avaliador = {id_diretor}
     """)
-
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
-
-    # Retorna os colaboradores no formato esperado
-    return {
-        row['nm_employee']: {
-            'id': row['id_employee'],
-            'departament': row['nm_departament'],
-            'gestor': row['nm_gestor'],
-            'diretor': row['nm_diretor'],
-            'diretoria': row['nm_diretoria']
-        }
-        for row in colaboradores
-    }
-
+    return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'],'diretor': row['nm_diretor'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
 
 def logout():
     st.session_state.clear()  # Limpa todo o session_state
@@ -188,7 +166,7 @@ def buscar_funcionarios_subordinados():
         connection = conectar_banco()
         cursor = connection.cursor()
 
-        # Busca o nome do gestor ou diretor logado
+        # Busca o nome do gestor com base no id_emp logado
         cursor.execute(f"""
             SELECT Nome
             FROM datalake.silver_pny.func_zoom
@@ -197,20 +175,20 @@ def buscar_funcionarios_subordinados():
         resultado = cursor.fetchone()
 
         if resultado:
-            nome_gestor_ou_diretor = resultado['Nome']
+            nome_gestor = resultado['Nome']
 
-            # Busca subordinados relacionados ao gestor ou diretor
+            # Busca os funcionários subordinados diretos
             cursor.execute(f"""
-                SELECT id, Nome, Setor, Gestor_Direto, Diretor_Gestor
+                SELECT id, Nome, Setor, Gestor_Direto
                 FROM datalake.silver_pny.func_zoom
-                WHERE Gestor_Direto = '{nome_gestor_ou_diretor}' OR Diretor_Gestor = '{nome_gestor_ou_diretor}'
+                WHERE Gestor_Direto = '{nome_gestor}' OR Diretor_Gestor = '{nome_gestor}'
             """)
             funcionarios = cursor.fetchall()
 
             cursor.close()
             connection.close()
 
-            # Retorna os subordinados como um dicionário
+            # Retorna os funcionários como um dicionário
             return {row['id']: row['Nome'] for row in funcionarios}
 
     return {}
@@ -233,14 +211,9 @@ def listar_avaliados_subordinados(conn, quarter=None):
     # Gerar uma lista de IDs dos subordinados
     ids_subordinados = tuple(subordinados.keys())
 
-    if len(ids_subordinados) == 1:
-        ids_subordinados = f"('{ids_subordinados[0]}')"  # Ajuste para evitar erro de sintaxe SQL com um único ID
-    else:
-        ids_subordinados = str(ids_subordinados)
-
     query = f"""
-    SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota as nota_final, 
-        colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta, data_resposta_quarter
+    SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
+        colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
     FROM datalake.avaliacao_abcd.avaliacao_abcd
     WHERE id_emp IN {ids_subordinados}
     """
@@ -518,14 +491,12 @@ def abcd_page():
     # Lista de IDs de supervisores permitidos
     if nome_gestor:
         subordinados = buscar_funcionarios_subordinados()  # Busca os subordinados do gestor logado
-        st.write("Subordinados encontrados:", subordinados)
         
         if subordinados:
             avaliados, nao_avaliados = [], []
             
             for id_emp, nome_funcionario in subordinados.items():
                 avaliacoes = verificar_se_foi_avaliado(id_emp)
-                st.write(f"ID: {id_emp}, Avaliações: {avaliacoes}")
                 
                 if avaliacoes:
                     for avaliacao in avaliacoes:
@@ -533,9 +504,6 @@ def abcd_page():
                         avaliados.append((nome_funcionario, data_resposta, soma_final, nota_final))
                 else:
                     nao_avaliados.append(nome_funcionario)
-
-                    st.write("Avaliados:", avaliados)  # Log para depuração
-                    st.write("Não Avaliados:", nao_avaliados)  # Log para depuração
 
             # Mostrar funcionários avaliados
             st.write("#### Funcionários Avaliados")
@@ -605,7 +573,7 @@ def abcd_page():
     
     
 
-     # Seção da página que lista as avaliações realizadas
+    # Seção da página que lista as avaliações realizadas
     st.subheader("Avaliações Realizadas")
 
     conn = conectar_banco()
@@ -631,6 +599,9 @@ def abcd_page():
 # Obter o `id_emp` diretamente dos parâmetros da URL
 query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
 id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
+
+#query_params = st.query_params
+#id_emp = query_params.get("user_id", [None])[0]
 
 # Verifique se o usuário está logado e se o token é válido
 if id_emp:
