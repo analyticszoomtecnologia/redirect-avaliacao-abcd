@@ -518,12 +518,14 @@ def abcd_page():
     # Lista de IDs de supervisores permitidos
     if nome_gestor:
         subordinados = buscar_funcionarios_subordinados()  # Busca os subordinados do gestor logado
+        st.write("Subordinados encontrados:", subordinados)
         
         if subordinados:
             avaliados, nao_avaliados = [], []
             
             for id_emp, nome_funcionario in subordinados.items():
                 avaliacoes = verificar_se_foi_avaliado(id_emp)
+                st.write(f"ID: {id_emp}, Avaliações: {avaliacoes}")
                 
                 if avaliacoes:
                     for avaliacao in avaliacoes:
@@ -531,6 +533,9 @@ def abcd_page():
                         avaliados.append((nome_funcionario, data_resposta, soma_final, nota_final))
                 else:
                     nao_avaliados.append(nome_funcionario)
+
+                    st.write("Avaliados:", avaliados)  # Log para depuração
+                    st.write("Não Avaliados:", nao_avaliados)  # Log para depuração
 
             # Mostrar funcionários avaliados
             st.write("#### Funcionários Avaliados")
