@@ -46,7 +46,7 @@ def verificar_token_no_banco(id_emp):
         st.write(f"Hora atual (UTC): {datetime.now(timezone.utc)}")
 
         # Calcula o tempo limite do token (1 hora a partir do created_at)
-        exp_datetime = created_at + timedelta(hours=1)
+        exp_datetime = created_at + timedelta(hours=24)
         st.write(f"Data de expiração calculada: {exp_datetime}")
 
         # Verifica se o token está dentro da validade
