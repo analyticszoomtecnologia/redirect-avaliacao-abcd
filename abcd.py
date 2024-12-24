@@ -188,7 +188,7 @@ def buscar_funcionarios_subordinados():
         connection = conectar_banco()
         cursor = connection.cursor()
 
-        # Busca o nome do gestor com base no id_emp logado
+        # Busca o nome do gestor ou diretor logado
         cursor.execute(f"""
             SELECT Nome
             FROM datalake.silver_pny.func_zoom
@@ -197,20 +197,20 @@ def buscar_funcionarios_subordinados():
         resultado = cursor.fetchone()
 
         if resultado:
-            nome_gestor = resultado['Nome']
+            nome_gestor_ou_diretor = resultado['Nome']
 
-            # Busca os funcionários subordinados diretos
+            # Busca subordinados relacionados ao gestor ou diretor
             cursor.execute(f"""
-                SELECT id, Nome, Setor, Gestor_Direto
+                SELECT id, Nome, Setor, Gestor_Direto, Diretor_Gestor
                 FROM datalake.silver_pny.func_zoom
-                WHERE Gestor_Direto = '{nome_gestor}' OR Diretor_Gestor = '{nome_gestor}'
+                WHERE Gestor_Direto = '{nome_gestor_ou_diretor}' OR Diretor_Gestor = '{nome_gestor_ou_diretor}'
             """)
             funcionarios = cursor.fetchall()
 
             cursor.close()
             connection.close()
 
-            # Retorna os funcionários como um dicionário
+            # Retorna os subordinados como um dicionário
             return {row['id']: row['Nome'] for row in funcionarios}
 
     return {}
@@ -233,9 +233,14 @@ def listar_avaliados_subordinados(conn, quarter=None):
     # Gerar uma lista de IDs dos subordinados
     ids_subordinados = tuple(subordinados.keys())
 
+    if len(ids_subordinados) == 1:
+        ids_subordinados = f"('{ids_subordinados[0]}')"  # Ajuste para evitar erro de sintaxe SQL com um único ID
+    else:
+        ids_subordinados = str(ids_subordinados)
+
     query = f"""
-    SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
-        colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
+    SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota as nota_final, 
+        colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta, data_resposta_quarter
     FROM datalake.avaliacao_abcd.avaliacao_abcd
     WHERE id_emp IN {ids_subordinados}
     """
@@ -595,7 +600,7 @@ def abcd_page():
     
     
 
-    # Seção da página que lista as avaliações realizadas
+     # Seção da página que lista as avaliações realizadas
     st.subheader("Avaliações Realizadas")
 
     conn = conectar_banco()
