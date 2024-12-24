@@ -41,9 +41,23 @@ def verificar_token_no_banco(id_emp):
 
     if resultado:
         token, created_at = resultado
-        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
-        st.write(f"Token válido: {token_valido}")
-        return token_valido
+
+        # Decodificar o token JWT para verificar expiração
+        try:
+            decoded_token = jwt.decode(token, secret_key, algorithms=["HS256"])
+            exp = decoded_token.get("exp")  # Tempo de expiração em segundos
+            current_time = datetime.now(timezone.utc).timestamp()  # Tempo atual em segundos
+
+            if exp and exp > current_time:
+                st.write("Token válido.")
+                return True
+            else:
+                st.write("Token expirado.")
+                return False
+        except jwt.ExpiredSignatureError:
+            st.write("Erro: Token expirado.")
+        except jwt.InvalidTokenError as e:
+            st.write(f"Erro: Token inválido ({e}).")
     else:
         st.write("Nenhum token encontrado para o usuário.")
     return False
