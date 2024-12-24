@@ -22,16 +22,6 @@ def conectar_banco():
         access_token=DB_ACCESS_TOKEN
     )
 
-secret_key = "data"
-
-# Função para conectar ao banco de dados
-def conectar_banco():
-    return sql.connect(
-        server_hostname=DB_SERVER_HOSTNAME,
-        http_path=DB_HTTP_PATH,
-        access_token=DB_ACCESS_TOKEN
-    )
-
 def verificar_token_no_banco(id_emp):
     connection = conectar_banco()
     cursor = connection.cursor()
