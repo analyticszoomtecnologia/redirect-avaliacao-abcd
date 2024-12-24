@@ -35,15 +35,14 @@ def verificar_token_no_banco(id_emp):
     resultado = cursor.fetchone()
     cursor.close()
     connection.close()
-    
+
     # Log para depuração
-    
+    st.write(f"Resultado do banco: {resultado}")
+
     if resultado:
         token, created_at = resultado
-        
-        # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
         token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
-
+        st.write(f"Token válido: {token_valido}")
         return token_valido
     else:
         st.write("Nenhum token encontrado para o usuário.")
