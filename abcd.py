@@ -22,8 +22,17 @@ def conectar_banco():
         access_token=DB_ACCESS_TOKEN
     )
 
+secret_key = "data"
+
+# Função para conectar ao banco de dados
+def conectar_banco():
+    return sql.connect(
+        server_hostname=DB_SERVER_HOSTNAME,
+        http_path=DB_HTTP_PATH,
+        access_token=DB_ACCESS_TOKEN
+    )
+
 def verificar_token_no_banco(id_emp):
-    # Conectar ao banco para buscar o token mais recente
     connection = conectar_banco()
     cursor = connection.cursor()
     cursor.execute(f"""
@@ -36,35 +45,18 @@ def verificar_token_no_banco(id_emp):
     resultado = cursor.fetchone()
     cursor.close()
     connection.close()
-
+    
+    # Log para depuração
+    
     if resultado:
         token, created_at = resultado
+        
+        # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
+        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=24)
 
-        # Log dos valores
-        st.write(f"Token encontrado: {token}")
-        st.write(f"Data de criação (UTC): {created_at}")
-        st.write(f"Hora atual (UTC): {datetime.now(timezone.utc)}")
-
-        # Calcula o tempo limite do token (1 hora a partir do created_at)
-        exp_datetime = created_at + timedelta(hours=24)
-        st.write(f"Data de expiração calculada: {exp_datetime}")
-
-        # Verifica se o token está dentro da validade
-        if exp_datetime > datetime.now(timezone.utc):
-            try:
-                # Decodifica o token para verificar integridade
-                decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
-                st.write(f"Payload do token: {decoded}")
-                return True
-            except jwt.ExpiredSignatureError:
-                st.error("Erro: A assinatura do token expirou.")
-            except jwt.InvalidTokenError as e:
-                st.error(f"Erro: Token inválido. Detalhes: {str(e)}")
-        else:
-            st.error("Erro: Token expirado.")
+        return token_valido
     else:
-        st.error("Nenhum token encontrado para o usuário.")
-    
+        st.write("Nenhum token encontrado para o usuário.")
     return False
 
 
