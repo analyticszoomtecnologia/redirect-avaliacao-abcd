@@ -1,8 +1,6 @@
 import streamlit as st
-import jwt
-import urllib.parse as urlparse
 from databricks import sql
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from dotenv import load_dotenv
 import os
 import pandas as pd
