@@ -35,29 +35,16 @@ def verificar_token_no_banco(id_emp):
     resultado = cursor.fetchone()
     cursor.close()
     connection.close()
-
+    
     # Log para depuração
-    st.write(f"Resultado do banco: {resultado}")
-
+    
     if resultado:
         token, created_at = resultado
+        
+        # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
+        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
 
-        # Decodificar o token JWT para verificar expiração
-        try:
-            decoded_token = jwt.decode(token, secret_key, algorithms=["HS256"])
-            exp = decoded_token.get("exp")  # Tempo de expiração em segundos
-            current_time = datetime.now(timezone.utc).timestamp()  # Tempo atual em segundos
-
-            if exp and exp > current_time:
-                st.write("Token válido.")
-                return True
-            else:
-                st.write("Token expirado.")
-                return False
-        except jwt.ExpiredSignatureError:
-            st.write("Erro: Token expirado.")
-        except jwt.InvalidTokenError as e:
-            st.write(f"Erro: Token inválido ({e}).")
+        return token_valido
     else:
         st.write("Nenhum token encontrado para o usuário.")
     return False
@@ -631,18 +618,18 @@ def abcd_page():
     else:
         st.error("Não foi possível conectar ao banco de dados.")
 
-# Obter o `id_emp` diretamente dos parâmetros da URL
+# Obter o id_emp diretamente dos parâmetros da URL
 query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
-id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
+id_emp = query_params.get("user_id", [None])[0]  # Usa user_id dos parâmetros da URL
 
 # Verifique se o usuário está logado e se o token é válido
 if id_emp:
-    if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
+    if verificar_token_no_banco(id_emp):  # Usa id_emp diretamente
         st.session_state['logged_in'] = True  # Defina o usuário como logado
         st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
 
         
-        # Renderizar a página `abcd_page` se o token for válido
+        # Renderizar a página abcd_page se o token for válido
         abcd_page()  # Chama a função abcd_page diretamente após a validação
 
     else:
