@@ -61,7 +61,7 @@ def buscar_colaboradores():
     connection = conectar_banco()
     cursor = connection.cursor()
 
-    # Consulta para obter os colaboradores cujo Diretor_Gestor seja o mesmo do diretor logado
+    # Consulta para obter os colaboradores cujo id_avaliador seja igual ao id_emp do diretor logado
     cursor.execute(f"""
         SELECT
           id AS id_employee,
@@ -72,11 +72,7 @@ def buscar_colaboradores():
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
-        WHERE Diretor_Gestor = (
-            SELECT Nome
-            FROM datalake.silver_pny.func_zoom
-            WHERE id = {id_diretor}
-        )
+        WHERE id_avaliador = {id_diretor}
     """)
 
     colaboradores = cursor.fetchall()
@@ -94,6 +90,7 @@ def buscar_colaboradores():
         }
         for row in colaboradores
     }
+
 
 def logout():
     st.session_state.clear()  # Limpa todo o session_state
