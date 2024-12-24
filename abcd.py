@@ -42,7 +42,7 @@ def verificar_token_no_banco(id_emp):
         token, created_at = resultado
         
         # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
-        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=24)
+        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
 
         return token_valido
     else:
@@ -600,9 +600,6 @@ def abcd_page():
 query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
 id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
 
-#query_params = st.query_params
-#id_emp = query_params.get("user_id", [None])[0]
-
 # Verifique se o usuário está logado e se o token é válido
 if id_emp:
     if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
@@ -617,3 +614,17 @@ if id_emp:
         st.error("Acesso negado: token inválido ou expirado.")
 else:
     st.error("ID de usuário não encontrado.")
+
+st.markdown(
+        """
+        <br><hr>
+        <div style='text-align: center;'>
+            Desenvolvido por 
+            <a href='https://www.linkedin.com/in/gabriel-cordeiro-033641144/' target='_blank' style='text-decoration: none; color: #0A66C2;'>
+                Gabriel Cordeiro
+                <img src='https://upload.wikimedia.org/wikipedia/commons/f/f8/LinkedIn_icon_circle.svg' alt='LinkedIn' width='20' style='vertical-align: middle; margin-right: 5px;' />
+            </a>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
