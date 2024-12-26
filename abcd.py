@@ -113,20 +113,32 @@ def buscar_id_gestor(nome_gestor):
 
 # Função para buscar os funcionários do gestor selecionado
 def buscar_funcionarios_por_gestor(nome_gestor):
+    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
+
+    if not id_diretor:
+        st.error("Erro: ID do diretor não encontrado.")
+        return {}
+
     connection = conectar_banco()
     cursor = connection.cursor()
+
     cursor.execute(f"""
         SELECT
           id AS id_employee,
-          Nome AS nm_employee
+          Nome AS nm_employee,
+          Setor AS nm_departament,
+          Gestor_Direto AS nm_gestor
         FROM
           datalake.silver_pny.func_zoom
-        WHERE Gestor_Direto = '{nome_gestor}'
+        WHERE Gestor_Direto = '{nome_gestor}' AND id_avaliador = {id_diretor}
     """)
+    
     funcionarios = cursor.fetchall()
     cursor.close()
     connection.close()
+
     return {row['id_employee']: row['nm_employee'] for row in funcionarios}
+
 
 # Função para verificar se o funcionário já foi avaliado
 def verificar_se_foi_avaliado(id_emp):
@@ -182,62 +194,71 @@ def listar_avaliados(conn, quarter=None):
 
 # Função para buscar os subordinados do gestor ou diretor logado
 def buscar_funcionarios_subordinados():
-    id_gestor = st.session_state.get('id_emp', None)
+    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
 
-    if id_gestor:
-        connection = conectar_banco()
-        cursor = connection.cursor()
+    if not id_diretor:
+        st.error("Erro: ID do diretor não encontrado.")
+        return {}
 
-        # Busca o nome do gestor com base no id_emp logado
-        cursor.execute(f"""
-            SELECT Nome
-            FROM datalake.silver_pny.func_zoom
-            WHERE id = {id_gestor}
-        """)
-        resultado = cursor.fetchone()
+    connection = conectar_banco()
+    cursor = connection.cursor()
 
-        if resultado:
-            nome_gestor = resultado['Nome']
+    # Consulta para obter subordinados cujo `id_avaliador` é igual ao `id_diretor`
+    cursor.execute(f"""
+        SELECT
+          id AS id_employee,
+          Nome AS nm_employee,
+          Setor AS nm_departament,
+          Gestor_Direto AS nm_gestor,
+          Diretor_Gestor AS nm_diretor
+        FROM
+          datalake.silver_pny.func_zoom
+        WHERE id_avaliador = {id_diretor}
+    """)
+    
+    funcionarios = cursor.fetchall()
+    cursor.close()
+    connection.close()
 
-            # Busca os funcionários subordinados diretos
-            cursor.execute(f"""
-                SELECT id, Nome, Setor, Gestor_Direto
-                FROM datalake.silver_pny.func_zoom
-                WHERE Gestor_Direto = '{nome_gestor}' OR Diretor_Gestor = '{nome_gestor}'
-            """)
-            funcionarios = cursor.fetchall()
+    return {row['id_employee']: row['nm_employee'] for row in funcionarios}
 
-            cursor.close()
-            connection.close()
-
-            # Retorna os funcionários como um dicionário
-            return {row['id']: row['Nome'] for row in funcionarios}
-
-    return {}
 
 # Função para listar os subordinados avaliados
 def listar_avaliados_subordinados(conn, quarter=None):
-    id_gestor = st.session_state.get('id_emp', None)
-    
-    if not id_gestor:
-        st.error("Erro: ID do gestor não encontrado.")
-        return pd.DataFrame()  # Retorna um DataFrame vazio para evitar falhas
+    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
 
-    # Buscar os subordinados do gestor logado
+    if not id_diretor:
+        st.error("Erro: ID do diretor não encontrado.")
+        return pd.DataFrame()
+
+    # Busca IDs dos subordinados do diretor logado
     subordinados = buscar_funcionarios_subordinados()
 
     if not subordinados:
         st.write("Nenhum subordinado encontrado.")
-        return pd.DataFrame()  # Retorna um DataFrame vazio
+        return pd.DataFrame()
 
-    # Gerar uma lista de IDs dos subordinados
     ids_subordinados = tuple(subordinados.keys())
 
     query = f"""
-    SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
-        colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
-    FROM datalake.avaliacao_abcd.avaliacao_abcd
-    WHERE id_emp IN {ids_subordinados}
+        SELECT
+          id_emp,
+          nome_colaborador,
+          nome_gestor,
+          setor,
+          diretoria,
+          nota,
+          soma_final,
+          colaboracao,
+          inteligencia_emocional,
+          responsabilidade,
+          iniciativa_proatividade,
+          flexibilidade,
+          conhecimento_tecnico,
+          data_resposta
+        FROM
+          datalake.avaliacao_abcd.avaliacao_abcd
+        WHERE id_emp IN {ids_subordinados}
     """
 
     cursor = conn.cursor()
@@ -245,17 +266,17 @@ def listar_avaliados_subordinados(conn, quarter=None):
     resultados = cursor.fetchall()
     colunas = [desc[0] for desc in cursor.description]
     df = pd.DataFrame(resultados, columns=colunas)
-    
-    # Calculando o Quarter com base na data de resposta
-    df['data_resposta_quarter'] = pd.to_datetime(df['data_resposta_quarter'])
-    df['quarter'] = df['data_resposta_quarter'].apply(calcular_quarter)
-    
-    # Filtrando por Quarter se for especificado
+
+    # Filtrando pelo Quarter, se especificado
+    df['data_resposta'] = pd.to_datetime(df['data_resposta'])
+    df['quarter'] = df['data_resposta'].apply(calcular_quarter)
+
     if quarter and quarter != "Todos":
         df = df[df['quarter'] == quarter]
 
     cursor.close()
     return df
+
 
 
 def abcd_page():
