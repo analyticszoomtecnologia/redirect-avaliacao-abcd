@@ -52,43 +52,42 @@ def verificar_token_no_banco(id_emp):
 
 # Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
-    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
+    id_gestor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
 
-    if not id_diretor:
+    if not id_gestor:
         st.error("Erro: ID do diretor não encontrado.")
         return {}
 
     connection = conectar_banco()
     cursor = connection.cursor()
 
-    # Consulta para obter os colaboradores cujo id_avaliador seja igual ao id_emp do diretor logado
-    cursor.execute(f"""
+# Função para buscar colaboradores da tabela dim_employee
+def buscar_colaboradores():
+    connection = conectar_banco()
+    cursor = connection.cursor()
+    cursor.execute("""
         SELECT
           id AS id_employee,
           Nome AS nm_employee,
           Setor AS nm_departament,
-          Gestor_Direto AS nm_gestor,
-          Diretor_Gestor AS nm_diretor,
+          Gestor_Direto AS nm_gestor,  -- Gestor direto
+          Diretor_Gestor AS nm_diretor,  -- Diretor responsável
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
     """)
-
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
 
-    # Retorna os colaboradores no formato esperado
-    return {
-        row['nm_employee']: {
-            'id': row['id_employee'],
-            'departament': row['nm_departament'],
-            'gestor': row['nm_gestor'],
-            'diretor': row['nm_diretor'],
-            'diretoria': row['nm_diretoria']
-        }
-        for row in colaboradores
-    }
+    # Aqui precisamos determinar quem será o avaliador com base na hierarquia.
+    return {row['nm_employee']: {
+        'id': row['id_employee'], 
+        'departament': row['nm_departament'], 
+        'gestor': row['nm_gestor'],  # Gestor direto
+        'diretor': row['nm_diretor'],  # Diretor responsável
+        'diretoria': row['nm_diretoria']
+    } for row in colaboradores}
 
 
 def logout():
