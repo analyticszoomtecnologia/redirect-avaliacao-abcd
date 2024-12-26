@@ -582,6 +582,7 @@ def abcd_page():
 
         # Buscar os subordinados do gestor logado
         subordinados = buscar_funcionarios_subordinados()
+        st.write(subordinados) 
 
         if not subordinados:
             st.write("Nenhum subordinado encontrado.")
