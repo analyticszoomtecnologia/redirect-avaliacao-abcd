@@ -288,6 +288,10 @@ def abcd_page():
         if st.button("Sair"):
             logout()
 
+    with st.sidebar:
+        if st.button("Voltar"):
+            logout()
+
     st.title("Avaliação ABCD")
     # Aplicando CSS para aumentar a largura da página e expandir elementos
     st.markdown(
