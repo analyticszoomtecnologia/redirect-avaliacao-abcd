@@ -192,7 +192,7 @@ def buscar_funcionarios_subordinados():
         cursor.execute(f"""
             SELECT Nome
             FROM datalake.silver_pny.func_zoom
-            WHERE id_avaliador = {id_gestor}
+            WHERE id = {id_gestor}
         """)
         resultado = cursor.fetchone()
 
@@ -511,9 +511,7 @@ def abcd_page():
 
 
     # Lista de IDs de supervisores permitidos
-    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
-    #if nome_gestor:
-    if id_diretor:
+    if nome_gestor:
         subordinados = buscar_funcionarios_subordinados()  # Busca os subordinados do gestor logado
         
         if subordinados:
