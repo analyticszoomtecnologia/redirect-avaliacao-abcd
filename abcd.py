@@ -99,7 +99,7 @@ def logout():
 
 def voltar():
     st.session_state.clear()  # Limpa todo o session_state
-    st.success("https://redirect-avaliacao-abcd.streamlit.app/")
+    st.success("https://redirect-avaliacao-abcd.streamlit.app/?user_id=${id_emp}")
     st.stop()
 
 # Função para buscar o id do gestor selecionado
