@@ -153,9 +153,10 @@ def verificar_se_foi_avaliado(id_emp):
     resultados = cursor.fetchall()
     cursor.close()
     connection.close()
-    
-    # Retorna a lista de avaliações com data, soma_final e nota
+
+    st.write(f"ID: {id_emp}, Resultados: {resultados}")  # Log para verificar os resultados
     return resultados if resultados else []
+
 
 def calcular_quarter(data):
     mes = data.month
@@ -540,6 +541,7 @@ def abcd_page():
             
             for id_emp, nome_funcionario in subordinados.items():
                 avaliacoes = verificar_se_foi_avaliado(id_emp)
+                st.write(f"Processando: {nome_funcionario} (ID: {id_emp}), Avaliações: {avaliacoes}")
                 
                 if avaliacoes:
                     for avaliacao in avaliacoes:
@@ -548,28 +550,22 @@ def abcd_page():
                 else:
                     nao_avaliados.append(nome_funcionario)
 
-            # Mostrar funcionários avaliados
-            st.write("#### Funcionários Avaliados")
-            st.write("NF = Nota Final, CTO = Nota Conceito")
-            if avaliados:
-                colunas_avaliados = st.columns(3)  # Grid de 3 colunas
-                for i, (nome_funcionario, data_resposta, soma_final, nota_final) in enumerate(avaliados):
-                    with colunas_avaliados[i % 3]:
-                        st.write(f"✅ {nome_funcionario}: (Data: {data_resposta}) (NF {soma_final}) (CTO {nota_final})")
-            else:
-                st.write("Nenhum funcionário avaliado encontrado.")
-
-            # Mostrar funcionários não avaliados
-            st.write("#### Funcionários Não Avaliados")
-            if nao_avaliados:
-                colunas_nao_avaliados = st.columns(3)  # Grid de 3 colunas
-                for i, nome_funcionario in enumerate(nao_avaliados):
-                    with colunas_nao_avaliados[i % 3]:
-                        st.write(f"❌ {nome_funcionario}")
-            else:
-                st.write("Todos os funcionários já foram avaliados.")
+    # Mostrar funcionários avaliados
+    st.write("#### Funcionários Avaliados")
+    if avaliados:
+        for nome_funcionario, data_resposta, soma_final, nota_final in avaliados:
+            st.write(f"✅ {nome_funcionario}: (Data: {data_resposta}) (NF: {soma_final}) (CTO: {nota_final})")
         else:
-            st.write("Nenhum subordinado encontrado.")
+            st.write("Nenhum funcionário avaliado encontrado.")
+
+    # Mostrar funcionários não avaliados
+    st.write("#### Funcionários Não Avaliados")
+    if nao_avaliados:
+        for nome_funcionario in nao_avaliados:
+            st.write(f"❌ {nome_funcionario}")
+        else:
+            st.write("Todos os funcionários já foram avaliados.")
+
         
 
     # Função para listar avaliações já realizadas e incluir a coluna de Quarter
