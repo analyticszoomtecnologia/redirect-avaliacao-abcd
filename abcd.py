@@ -97,6 +97,11 @@ def logout():
     st.success("Você saiu com sucesso!")
     st.stop()
 
+def voltar():
+    st.session_state.clear()  # Limpa todo o session_state
+    st.success("https://redirect-avaliacao-abcd.streamlit.app/")
+    st.stop()
+
 # Função para buscar o id do gestor selecionado
 def buscar_id_gestor(nome_gestor):
     connection = conectar_banco()
@@ -290,7 +295,7 @@ def abcd_page():
 
     with st.sidebar:
         if st.button("Voltar"):
-            logout()
+            voltar()
 
     st.title("Avaliação ABCD")
     # Aplicando CSS para aumentar a largura da página e expandir elementos
