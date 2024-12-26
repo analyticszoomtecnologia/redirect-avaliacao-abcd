@@ -52,44 +52,28 @@ def verificar_token_no_banco(id_emp):
 
 # Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
-    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
-
-    if not id_diretor:
-        st.error("Erro: ID do diretor não encontrado.")
-        return {}
-
     connection = conectar_banco()
     cursor = connection.cursor()
-
-    # Consulta para obter os colaboradores cujo id_avaliador seja igual ao id_emp do diretor logado
-    cursor.execute(f"""
+    cursor.execute("""
         SELECT
           id AS id_employee,
           Nome AS nm_employee,
           Setor AS nm_departament,
           Gestor_Direto AS nm_gestor,
-          Diretor_Gestor AS nm_diretor,
+          Diretor_Gestor as nm_diretor,
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
-        WHERE id_avaliador = {id_diretor}
     """)
-
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
+    return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'],'diretor': row['nm_diretor'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
 
-    # Retorna os colaboradores no formato esperado
-    return {
-        row['nm_employee']: {
-            'id': row['id_employee'],
-            'departament': row['nm_departament'],
-            'gestor': row['nm_gestor'],
-            'diretor': row['nm_diretor'],
-            'diretoria': row['nm_diretoria']
-        }
-        for row in colaboradores
-    }
+def logout():
+    st.session_state.clear()  # Limpa todo o session_state
+    st.success("Você saiu com sucesso!")
+    st.stop()
 
 
 def logout():
