@@ -55,7 +55,7 @@ def buscar_colaboradores():
     connection = conectar_banco()
     cursor = connection.cursor()
 
-    # Consulta para obter os colaboradores cujo id_avaliador seja igual ao id_emp do diretor logado
+    # Consulta para obter os colaboradores
     cursor.execute(f"""
         SELECT
           id AS id_employee,
@@ -227,8 +227,21 @@ def listar_avaliados_subordinados(conn, quarter=None):
     ids_subordinados = tuple(subordinados.keys())
 
     query = f"""
-    SELECT id_emp, nome_colaborador, nome_gestor, setor, diretoria, nota, soma_final, 
-        colaboracao, inteligencia_emocional, responsabilidade, iniciativa_proatividade, flexibilidade, conhecimento_tecnico, data_resposta
+    SELECT 
+        id_emp, 
+        nome_colaborador, 
+        nome_gestor, 
+        setor, 
+        diretoria, 
+        nota AS nota_final, 
+        colaboracao, 
+        inteligencia_emocional, 
+        responsabilidade, 
+        iniciativa_proatividade, 
+        flexibilidade, 
+        conhecimento_tecnico, 
+        data_resposta, 
+        data_resposta_quarter
     FROM datalake.avaliacao_abcd.avaliacao_abcd
     WHERE id_emp IN {ids_subordinados}
     """
@@ -238,6 +251,13 @@ def listar_avaliados_subordinados(conn, quarter=None):
     resultados = cursor.fetchall()
     colunas = [desc[0] for desc in cursor.description]
     df = pd.DataFrame(resultados, columns=colunas)
+    
+    # Contando o número de avaliações por colaborador
+    avaliacoes_por_colaborador = df.groupby('id_emp').size().reset_index(name='quantidade_avaliacoes')
+    
+    # Filtrando colaboradores com menos de 4 avaliações
+    ids_filtrados = avaliacoes_por_colaborador[avaliacoes_por_colaborador['quantidade_avaliacoes'] < 4]['id_emp']
+    df = df[df['id_emp'].isin(ids_filtrados)]
     
     # Calculando o Quarter com base na data de resposta
     df['data_resposta_quarter'] = pd.to_datetime(df['data_resposta_quarter'])
