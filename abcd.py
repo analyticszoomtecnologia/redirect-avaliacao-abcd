@@ -42,7 +42,7 @@ def verificar_token_no_banco(id_emp):
         token, created_at = resultado
         
         # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
-        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
+        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=24)
 
         return token_valido
     else:
@@ -599,6 +599,9 @@ def abcd_page():
 # Obter o `id_emp` diretamente dos parâmetros da URL
 query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
 id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
+
+#query_params = st.query_params
+#id_emp = query_params.get("user_id", [None])[0]
 
 # Verifique se o usuário está logado e se o token é válido
 if id_emp:
