@@ -42,7 +42,7 @@ def verificar_token_no_banco(id_emp):
         token, created_at = resultado
         
         # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
-        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
+        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=24)
 
         return token_valido
     else:
