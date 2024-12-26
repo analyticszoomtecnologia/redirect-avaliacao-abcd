@@ -52,10 +52,16 @@ def verificar_token_no_banco(id_emp):
 
 # Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
+    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
+
+    if not id_diretor:
+        st.error("Erro: ID do diretor não encontrado.")
+        return {}
+
     connection = conectar_banco()
     cursor = connection.cursor()
 
-    # Consulta para obter os colaboradores
+    # Consulta para obter os colaboradores cujo id_avaliador seja igual ao id_emp do diretor logado
     cursor.execute(f"""
         SELECT
           id AS id_employee,
@@ -66,6 +72,7 @@ def buscar_colaboradores():
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
+        WHERE id_avaliador = {id_diretor}
     """)
 
     colaboradores = cursor.fetchall()
