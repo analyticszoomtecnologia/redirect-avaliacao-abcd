@@ -54,21 +54,36 @@ def verificar_token_no_banco(id_emp):
 def buscar_colaboradores():
     connection = conectar_banco()
     cursor = connection.cursor()
-    cursor.execute("""
+
+    # Consulta para obter os colaboradores cujo id_avaliador seja igual ao id_emp do diretor logado
+    cursor.execute(f"""
         SELECT
           id AS id_employee,
           Nome AS nm_employee,
           Setor AS nm_departament,
           Gestor_Direto AS nm_gestor,
-          Diretor_Gestor as nm_diretor,
+          Diretor_Gestor AS nm_diretor,
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
     """)
+
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
-    return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'],'diretor': row['nm_diretor'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
+
+    # Retorna os colaboradores no formato esperado
+    return {
+        row['nm_employee']: {
+            'id': row['id_employee'],
+            'departament': row['nm_departament'],
+            'gestor': row['nm_gestor'],
+            'diretor': row['nm_diretor'],
+            'diretoria': row['nm_diretoria']
+        }
+        for row in colaboradores
+    }
+
 
 def logout():
     st.session_state.clear()  # Limpa todo o session_state
@@ -104,9 +119,7 @@ def buscar_funcionarios_por_gestor(nome_gestor):
     funcionarios = cursor.fetchall()
     cursor.close()
     connection.close()
-    # Retornando como um dicionário com o nome e o ID
-    return {row['nm_employee']: {'id': row['id_employee'], 'nome': row['nm_employee']} for row in funcionarios}
-
+    return {row['id_employee']: row['nm_employee'] for row in funcionarios}
 
 # Função para verificar se o funcionário já foi avaliado
 def verificar_se_foi_avaliado(id_emp):
@@ -160,7 +173,7 @@ def listar_avaliados(conn, quarter=None):
     cursor.close()
     return df
 
-# Função para buscar os subordinados a partir da tabela específica do avaliador
+# Função para buscar os subordinados do gestor ou diretor logado
 def buscar_funcionarios_subordinados():
     id_gestor = st.session_state.get('id_emp', None)
 
@@ -168,7 +181,7 @@ def buscar_funcionarios_subordinados():
         connection = conectar_banco()
         cursor = connection.cursor()
 
-        # Buscar o nome do avaliador com base no id_emp logado
+        # Busca o nome do gestor com base no id_emp logado
         cursor.execute(f"""
             SELECT Nome
             FROM datalake.silver_pny.func_zoom
@@ -179,36 +192,19 @@ def buscar_funcionarios_subordinados():
         if resultado:
             nome_gestor = resultado['Nome']
 
-            # Mapeamento de avaliadores para suas tabelas específicas
-            tabela_map = {
-                "Grasiele Bof": "func_zoom_grasiele",
-                "Guilherme Nunes": "func_zoom_guilherme",
-                "Lisiane P.": "func_zoom_lisiane",
-                "Lucio L.": "func_zoom_lucio",
-                "Rodrigo S.": "func_zoom_rodrigo_santos"
-            }
+            # Busca os funcionários subordinados diretos
+            cursor.execute(f"""
+                SELECT id, Nome, Setor, Gestor_Direto
+                FROM datalake.silver_pny.func_zoom
+                WHERE Gestor_Direto = '{nome_gestor}' OR Diretor_Gestor = '{nome_gestor}'
+            """)
+            funcionarios = cursor.fetchall()
 
-            # Obter a tabela correspondente ao avaliador
-            tabela_avaliador = tabela_map.get(nome_gestor)
+            cursor.close()
+            connection.close()
 
-            if tabela_avaliador:
-                # Agora busca os funcionários da tabela específica do avaliador
-                cursor.execute(f"""
-                    SELECT id_employee, Nome
-                    FROM {tabela_avaliador}
-                """)
-                funcionarios = cursor.fetchall()
-
-                cursor.close()
-                connection.close()
-
-                # Retorna os funcionários como um dicionário
-                return {row['id_employee']: row['Nome'] for row in funcionarios}
-
-            else:
-                st.error("Tabela do avaliador não encontrada.")
-        else:
-            st.error("Gestor não encontrado.")
+            # Retorna os funcionários como um dicionário
+            return {row['id']: row['Nome'] for row in funcionarios}
 
     return {}
 
@@ -244,8 +240,8 @@ def listar_avaliados_subordinados(conn, quarter=None):
     df = pd.DataFrame(resultados, columns=colunas)
     
     # Calculando o Quarter com base na data de resposta
-    df['data_resposta'] = pd.to_datetime(df['data_resposta'])
-    df['quarter'] = df['data_resposta'].apply(calcular_quarter)
+    df['data_resposta_quarter'] = pd.to_datetime(df['data_resposta_quarter'])
+    df['quarter'] = df['data_resposta_quarter'].apply(calcular_quarter)
     
     # Filtrando por Quarter se for especificado
     if quarter and quarter != "Todos":
@@ -409,7 +405,7 @@ def abcd_page():
 
     st.header("Preencha as informações abaixo:")
 
-        # Buscar colaboradores e subordinados
+    # Buscar colaboradores e subordinados
     colaboradores_data = buscar_colaboradores()
     subordinados_data = buscar_funcionarios_subordinados()
 
@@ -417,7 +413,6 @@ def abcd_page():
     cols_inputs = st.columns(2)
 
     with cols_inputs[0]:
-        # Campo para selecionar o colaborador
         nome_colaborador = st.selectbox("Nome do Colaborador", options=[""] + list(colaboradores_data.keys()))
         if nome_colaborador:
             id_emp = colaboradores_data[nome_colaborador]['id']
@@ -425,30 +420,25 @@ def abcd_page():
             id_emp = None
 
     with cols_inputs[1]:
-        # Campo para mostrar o nome do gestor direto
         nome_gestor = st.text_input("Líder Direto", value=colaboradores_data[nome_colaborador]['gestor'] if nome_colaborador else "", disabled=True)
 
     cols_inputs2 = st.columns(2)
 
     with cols_inputs2[0]:
-        # Campo para mostrar o setor
         setor = st.selectbox("Setor", options=[colaboradores_data[nome_colaborador]['departament']] if nome_colaborador else [""])
 
     with cols_inputs2[1]:
-        # Campo para mostrar a diretoria
         diretoria = st.text_input("Diretoria", value=colaboradores_data[nome_colaborador]['diretoria'] if nome_colaborador else "", disabled=True)
 
-    # Adicionando o campo "Diretor Responsável"
-    cols_inputs3 = st.columns(1)
-    with cols_inputs3[0]:
+    # Adicionando o campo do Diretor para exibir na tela
+    with cols_inputs2[0]:
         nome_diretor = st.text_input("Diretor Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
 
     cols_date = st.columns([1, 3])
 
     with cols_date[0]:
-        # Campo para selecionar a data de resposta
         data_resposta = st.date_input("Data da Resposta", value=datetime.today(), format="DD-MM-YYYY")
-
+    
 
     # Verifica se o colaborador selecionado é subordinado do gestor logado
     if nome_colaborador and id_emp in subordinados_data:
@@ -621,21 +611,18 @@ def abcd_page():
     else:
         st.error("Não foi possível conectar ao banco de dados.")
 
-# Obter o id_emp diretamente dos parâmetros da URL
-query_params = st.query_params  # Garantir que estamos pegando o ID direto da URL
-id_emp = query_params.get("user_id", [None])[0]  # Usa user_id dos parâmetros da URL
-
-#query_params = st.query_params
-#id_emp = query_params.get("user_id", [None])[0]
+# Obter o `id_emp` diretamente dos parâmetros da URL
+query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
+id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
 
 # Verifique se o usuário está logado e se o token é válido
 if id_emp:
-    if verificar_token_no_banco(id_emp):  # Usa id_emp diretamente
+    if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
         st.session_state['logged_in'] = True  # Defina o usuário como logado
         st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
 
         
-        # Renderizar a página abcd_page se o token for válido
+        # Renderizar a página `abcd_page` se o token for válido
         abcd_page()  # Chama a função abcd_page diretamente após a validação
 
     else:
