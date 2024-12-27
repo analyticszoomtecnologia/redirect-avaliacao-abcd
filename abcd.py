@@ -106,7 +106,7 @@ def voltar():
         """
         <script>
         setTimeout(function() {
-            window.location.href = "https://redirect-avaliacao-abcd.streamlit.app/";
+            window.location.href = "https://avaliacao-abcd-quarter.streamlit.app/";
         }, 1000);
         </script>
         """,
