@@ -57,14 +57,22 @@ def buscar_colaboradores():
     cursor = connection.cursor()
     cursor.execute("""
         SELECT
-          id AS id_employee,
-          Nome AS nm_employee,
-          Setor AS nm_departament,
-          Gestor_Direto AS nm_gestor,
-          Diretor_Gestor as nm_diretor,
-          Diretoria AS nm_diretoria
+            fz.id AS id_employee,
+            fz.Nome AS nm_employee,
+            fz.Setor AS nm_departament,
+            fz.Gestor_Direto AS nm_gestor,
+            fz.Diretor_Gestor AS nm_diretor,
+            fz.Diretoria AS nm_diretoria,
+            lt.login_nome AS nome
         FROM
-          datalake.silver_pny.func_zoom
+            datalake.silver_pny.func_zoom fz
+        JOIN
+            datalake.avaliacao_abcd.login lt
+        ON
+            fz.Diretor_Gestor = lt.login_nome
+        WHERE
+            lt.id_emp = '{id_emp}'
+            ORDER BY fz.Nome ASC;
     """)
     colaboradores = cursor.fetchall()
     cursor.close()
