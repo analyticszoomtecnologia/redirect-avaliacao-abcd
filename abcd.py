@@ -52,7 +52,7 @@ def verificar_token_no_banco(id_emp):
 
 
 # Função para buscar colaboradores da tabela dim_employee
-def buscar_colaboradores():
+def buscar_colaboradores(user_id):
     connection = conectar_banco()
     cursor = connection.cursor()
     cursor.execute("""
