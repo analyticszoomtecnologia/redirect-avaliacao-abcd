@@ -71,8 +71,8 @@ def buscar_colaboradores():
                     SELECT Diretor_Gestor
                     FROM datalake.silver_pny.func_zoom
                     WHERE id = %s
-                    ORDER BY Nome ASC
                 )
+                    ORDER BY Nome ASC
     """ % (user_id)) 
     colaboradores = cursor.fetchall()
     cursor.close()
