@@ -40,7 +40,7 @@ def verificar_token_no_banco(id_emp):
     cursor.execute(f"""
         SELECT token, created_at
         FROM datalake.avaliacao_abcd.tokens
-        WHERE user_id = '{id_emp}'
+        WHERE user_id = 75
         ORDER BY created_at DESC
         LIMIT 1
     """)
