@@ -65,7 +65,7 @@ def buscar_colaboradores():
           fz.Diretoria AS nm_diretoria
         FROM datalake.silver_pny.func_zoom fz
         JOIN datalake.avaliacao_abcd.login lt
-        ON fz.Diretor_Gestor = lt.Nome
+        ON fz.Diretor_Gestor = lt.nome
         WHERE lt.id_emp = {id_emp}
         ORDER BY fz.Nome ASC;
     """)
