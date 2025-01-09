@@ -52,32 +52,45 @@ def verificar_token_no_banco(id_emp):
 
 
 # Função para buscar colaboradores da tabela dim_employee
-def buscar_colaboradores():
-    connection = conectar_banco()
+# Função para buscar colaboradores
+def buscar_colaboradores(id_emp):
+    connection = conectar_banco()  # Conexão com o Databricks
     cursor = connection.cursor()
-    cursor.execute("""
-        SELECT
-            fz.id AS id_employee,
-            fz.Nome AS nm_employee,
-            fz.Setor AS nm_departament,
-            fz.Gestor_Direto AS nm_gestor,
-            fz.Diretor_Gestor AS nm_diretor,
-            fz.Diretoria AS nm_diretoria,
-            lt.login_nome AS nome
-        FROM
-            datalake.silver_pny.func_zoom fz
-        JOIN
-            datalake.avaliacao_abcd.login lt
-        ON
-            fz.Diretor_Gestor = lt.login_nome
-        WHERE
-            lt.id_emp = '{id_emp}'
-            ORDER BY fz.Nome ASC;
-    """)
+
+    # Query SQL com placeholder
+    query = """
+    SELECT
+      fz.id AS id_employee,
+      fz.Nome AS nm_employee,
+      fz.Setor AS nm_departament,
+      fz.Gestor_Direto AS nm_gestor,
+      fz.Diretor_Gestor AS nm_diretor,
+      fz.Diretoria AS nm_diretoria
+    FROM datalake.silver_pny.func_zoom fz
+    JOIN datalake.avaliacao_abcd.login lt
+    ON fz.Diretor_Gestor = lt.login_nome
+    WHERE lt.id_emp = ?
+    ORDER BY fz.Nome ASC;
+    """
+
+    # Executa a query com o parâmetro dinâmico
+    cursor.execute(query, (id_emp,))
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
-    return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'],'diretor': row['nm_diretor'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
+
+    # Converte os resultados em um formato estruturado
+    return [
+        {
+            "id_employee": row["id_employee"],
+            "nm_employee": row["nm_employee"],
+            "nm_departament": row["nm_departament"],
+            "nm_gestor": row["nm_gestor"],
+            "nm_diretor": row["nm_diretor"],
+            "nm_diretoria": row["nm_diretoria"],
+        }
+        for row in colaboradores
+    ]
 
 def logout():
     st.session_state.clear()  # Limpa todo o session_state
