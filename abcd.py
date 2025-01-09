@@ -67,8 +67,7 @@ def buscar_colaboradores(user_id):
             fz.Setor AS nm_departament,
             fz.Gestor_Direto AS nm_gestor,
             fz.Diretor_Gestor AS nm_diretor,
-            fz.Diretoria AS nm_diretoria,
-            lt.nome AS nomeLogin
+            fz.Diretoria AS nm_diretoria
         FROM
             datalake.silver_pny.func_zoom fz
         JOIN
@@ -79,11 +78,13 @@ def buscar_colaboradores(user_id):
             lt.id_emp = ?
         ORDER BY fz.Nome ASC;
     """
+    # Passa o user_id como parâmetro para a consulta
     cursor.execute(query, (user_id,))
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
     
+    # Converte o resultado em um dicionário estruturado
     return {
         row['nm_employee']: {
             'id': row['id_employee'],
