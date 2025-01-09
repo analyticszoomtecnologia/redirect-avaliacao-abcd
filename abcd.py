@@ -612,8 +612,8 @@ def abcd_page():
 
 # Obter o `id_emp` diretamente dos parâmetros da URL
 #query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
-params = st.query_params
-id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
+params = st.query_params  # Atualizado para a nova API
+user_id = params.get("user_id", [None])[0]
 
 # Verifique se o usuário está logado e se o token é válido
 if id_emp:
