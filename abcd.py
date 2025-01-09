@@ -53,7 +53,7 @@ def verificar_token_no_banco(id_emp):
 
 # Função para buscar colaboradores da tabela dim_employee
 # Função para buscar colaboradores
-def buscar_colaboradores(id_emp):
+def buscar_colaboradores():
     connection = conectar_banco()  # Conexão com o Databricks
     cursor = connection.cursor()
 
