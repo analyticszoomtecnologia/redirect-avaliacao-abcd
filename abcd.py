@@ -56,6 +56,7 @@ def buscar_colaboradores():
     connection = conectar_banco()
     cursor = connection.cursor()
     user_id = st.session_state.get('id_emp', None)
+    print(st.session_state)
     cursor.execute("""
         SELECT
           id AS id_employee,
