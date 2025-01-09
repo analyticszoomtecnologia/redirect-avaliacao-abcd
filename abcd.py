@@ -67,10 +67,6 @@ def buscar_colaboradores(id_emp):
       fz.Diretor_Gestor AS nm_diretor,
       fz.Diretoria AS nm_diretoria
     FROM datalake.silver_pny.func_zoom fz
-    JOIN datalake.avaliacao_abcd.login lt
-    ON fz.Diretor_Gestor = lt.login_nome
-    WHERE lt.id_emp = ?
-    ORDER BY fz.Nome ASC;
     """
 
     # Executa a query com o parâmetro dinâmico
