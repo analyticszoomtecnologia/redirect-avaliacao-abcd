@@ -67,7 +67,7 @@ def buscar_colaboradores():
         FROM
           datalake.silver_pny.func_zoom
         WHERE Diretor_Gestor = '%s'
-    """) % (user_id)
+    """ % (user_id)) 
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
