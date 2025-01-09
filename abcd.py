@@ -55,6 +55,7 @@ def verificar_token_no_banco(id_emp):
 def buscar_colaboradores():
     connection = conectar_banco()
     cursor = connection.cursor()
+    user_id = st.session_state.get('id_emp', None)
     cursor.execute("""
         SELECT
           id AS id_employee,
@@ -65,7 +66,8 @@ def buscar_colaboradores():
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
-    """)
+        WHERE Diretor_Gestor = '%s'
+    """ % (user_id)
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
