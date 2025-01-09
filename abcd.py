@@ -57,7 +57,7 @@ def verificar_token_no_banco(id_emp):
     return False
 
 # Função para buscar colaboradores da tabela
-def buscar_colaboradores(user_id):
+def buscar_colaboradores(id_emp):
     connection = conectar_banco()
     cursor = connection.cursor()
     query = """
@@ -75,7 +75,7 @@ def buscar_colaboradores(user_id):
         ON
             fz.Diretor_Gestor = lt.Nome
         WHERE
-            lt.id_emp = 75
+            lt.id_emp = id_emp
         ORDER BY fz.Nome ASC;
     """
     # Passa o user_id como parâmetro para a consulta
