@@ -68,15 +68,10 @@ def buscar_colaboradores():
                 datalake.silver_pny.func_zoom
             WHERE
                 Diretor_Gestor = (
-                    SELECT Diretor_Gestor OR Gestor_Diretor
+                    SELECT Diretor_Gestor
                     FROM datalake.silver_pny.func_zoom
                     WHERE id = %s
                 )
-                OR Gestor_Direto = (
-                    SELECT Gestor_Direto
-                    FROM datalake.silver_pny.func_zoom
-                    WHERE id = %s
-        )
                     ORDER BY Nome ASC
     """ % (user_id)) 
     colaboradores = cursor.fetchall()
@@ -611,9 +606,8 @@ def abcd_page():
         st.error("Não foi possível conectar ao banco de dados.")
 
 # Obter o `id_emp` diretamente dos parâmetros da URL
-#query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
-params = st.query_params  # Atualizado para a nova API
-user_id = params.get("user_id", [None])[0]
+query_params = st.experimental_get_query_params()  # Garantir que estamos pegando o ID direto da URL
+id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros da URL
 
 # Verifique se o usuário está logado e se o token é válido
 if id_emp:
