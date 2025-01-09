@@ -70,12 +70,12 @@ def buscar_colaboradores():
             Diretor_Gestor = (
                 SELECT Diretor_Gestor
                 FROM datalake.silver_pny.func_zoom
-                WHERE id = ?
+                WHERE id = %s
             )
             OR Gestor_Direto = (
                 SELECT Gestor_Direto
                 FROM datalake.silver_pny.func_zoom
-                WHERE id = ?
+                WHERE id = %s
             )
         ORDER BY Nome ASC
     """ % (user_id)) 
