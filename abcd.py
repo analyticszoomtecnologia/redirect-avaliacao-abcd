@@ -1,13 +1,14 @@
 import streamlit as st
 import jwt
+import urllib.parse as urlparse
 from databricks import sql
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import os
+import pandas as pd
+import webbrowser
 
 load_dotenv()
-
-# Variáveis de ambiente
 DB_SERVER_HOSTNAME = os.getenv("DB_SERVER_HOSTNAME")
 DB_HTTP_PATH = os.getenv("DB_HTTP_PATH")
 DB_ACCESS_TOKEN = os.getenv("DB_ACCESS_TOKEN")
@@ -22,18 +23,6 @@ def conectar_banco():
         access_token=DB_ACCESS_TOKEN
     )
 
-# Função para obter o user_id a partir do token
-def obter_user_id(token):
-    try:
-        decoded_token = jwt.decode(token, secret_key, algorithms=["HS256"])
-        return decoded_token.get("id_emp")
-    except jwt.ExpiredSignatureError:
-        st.error("Token expirado. Faça login novamente.")
-    except jwt.InvalidTokenError:
-        st.error("Token inválido. Faça login novamente.")
-    return None
-
-# Função para verificar o token no banco
 def verificar_token_no_banco(id_emp):
     connection = conectar_banco()
     cursor = connection.cursor()
@@ -48,57 +37,42 @@ def verificar_token_no_banco(id_emp):
     cursor.close()
     connection.close()
     
+    # Log para depuração
+    
     if resultado:
-        _, created_at = resultado
+        token, created_at = resultado
+        
+        # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
         token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
+
         return token_valido
     else:
         st.write("Nenhum token encontrado para o usuário.")
     return False
 
-# Função para buscar colaboradores da tabela
+
+# Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
-    user_id = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
     connection = conectar_banco()
     cursor = connection.cursor()
-    query = """
+    cursor.execute("""
         SELECT
-            fz.id AS id_employee,
-            fz.Nome AS nm_employee,
-            fz.Setor AS nm_departament,
-            fz.Gestor_Direto AS nm_gestor,
-            fz.Diretor_Gestor AS nm_diretor,
-            fz.Diretoria AS nm_diretoria
+          id AS id_employee,
+          Nome AS nm_employee,
+          Setor AS nm_departament,
+          Gestor_Direto AS nm_gestor,
+          Diretor_Gestor as nm_diretor,
+          Diretoria AS nm_diretoria
         FROM
-            datalake.silver_pny.func_zoom fz
-        JOIN
-            datalake.avaliacao_abcd.login lt
-        ON
-            fz.Diretor_Gestor = lt.Nome
-        WHERE
-            '{user_id}' = lt.id_emp 
-        ORDER BY fz.Nome ASC;
-    """
-    # Passa o user_id como parâmetro para a consulta
-    cursor.execute(query, (user_id,))
+          datalake.silver_pny.func_zoom
+    """)
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
-    
-    # Converte o resultado em um dicionário estruturado
-    return {
-        row['nm_employee']: {
-            'id': row['id_employee'],
-            'departament': row['nm_departament'],
-            'diretor': row['nm_diretor'],
-            'gestor': row['nm_gestor'],
-            'diretoria': row['nm_diretoria']
-        } for row in colaboradores
-    }
+    return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'],'diretor': row['nm_diretor'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
 
-# Função para logout
 def logout():
-    st.session_state.clear()
+    st.session_state.clear()  # Limpa todo o session_state
     st.success("Você saiu com sucesso!")
     st.stop()
 
