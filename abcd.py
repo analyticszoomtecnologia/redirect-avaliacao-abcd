@@ -62,12 +62,16 @@ def buscar_colaboradores():
             fz.Setor AS nm_departament,
             fz.Gestor_Direto AS nm_gestor,
             fz.Diretor_Gestor AS nm_diretor,
-            fz.Diretoria AS nm_diretoria
+            fz.Diretoria AS nm_diretoria,
             lt.Nome AS nomeLogin
-        FROM datalake.silver_pny.func_zoom fz
-        JOIN datalake.avaliacao_abcd.login lt
-        ON fz.Diretor_Gestor = lt.nomeLogin
-        WHERE lt.id_emp = 75;
+        FROM
+            datalake.silver_pny.func_zoom fz
+        JOIN
+            datalake.avaliacao_abcd.login lt
+        ON
+            fz.Diretor_Gestor = lt.Nome
+        WHERE
+            lt.id_emp = %s;
     """)
     colaboradores = cursor.fetchall()
     cursor.close()
