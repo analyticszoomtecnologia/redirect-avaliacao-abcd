@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import os
 import pandas as pd
+import webbrowser
 
 load_dotenv()
 DB_SERVER_HOSTNAME = os.getenv("DB_SERVER_HOSTNAME")
@@ -42,7 +43,7 @@ def verificar_token_no_banco(id_emp):
         token, created_at = resultado
         
         # Considera o token válido por 1 hora (ajusta para fuso horário UTC)
-        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=24)
+        token_valido = created_at > datetime.now(timezone.utc) - timedelta(hours=1)
 
         return token_valido
     else:
@@ -52,45 +53,23 @@ def verificar_token_no_banco(id_emp):
 
 # Função para buscar colaboradores da tabela dim_employee
 def buscar_colaboradores():
-    id_diretor = st.session_state.get('id_emp')  # Obtém o id_emp do diretor logado
-
-    if not id_diretor:
-        st.error("Erro: ID do diretor não encontrado.")
-        return {}
-
     connection = conectar_banco()
     cursor = connection.cursor()
-
-    # Consulta para obter os colaboradores cujo id_avaliador seja igual ao id_emp do diretor logado
-    cursor.execute(f"""
+    cursor.execute("""
         SELECT
           id AS id_employee,
           Nome AS nm_employee,
           Setor AS nm_departament,
           Gestor_Direto AS nm_gestor,
-          Diretor_Gestor AS nm_diretor,
+          Diretor_Gestor as nm_diretor,
           Diretoria AS nm_diretoria
         FROM
           datalake.silver_pny.func_zoom
-        WHERE id_avaliador = {id_diretor}
     """)
-
     colaboradores = cursor.fetchall()
     cursor.close()
     connection.close()
-
-    # Retorna os colaboradores no formato esperado
-    return {
-        row['nm_employee']: {
-            'id': row['id_employee'],
-            'departament': row['nm_departament'],
-            'gestor': row['nm_gestor'],
-            'diretor': row['nm_diretor'],
-            'diretoria': row['nm_diretoria']
-        }
-        for row in colaboradores
-    }
-
+    return {row['nm_employee']: {'id': row['id_employee'], 'departament': row['nm_departament'],'diretor': row['nm_diretor'], 'gestor': row['nm_gestor'], 'diretoria': row['nm_diretoria']} for row in colaboradores}
 
 def logout():
     st.session_state.clear()  # Limpa todo o session_state
@@ -264,7 +243,7 @@ def abcd_page():
         st.error("Você precisa fazer login para acessar essa página.")
         return
     
-    with st.sidebar:
+    with st.sidebar:            
         if st.button("Sair"):
             logout()
 
@@ -636,3 +615,17 @@ if id_emp:
         st.error("Acesso negado: token inválido ou expirado.")
 else:
     st.error("ID de usuário não encontrado.")
+
+#st.markdown(
+        #"""
+        #<br><hr>
+        #<div style='text-align: center;'>
+            #Desenvolvido por 
+            #<a href='https://www.linkedin.com/in/gabriel-cordeiro-033641144/' target='_blank' style='text-decoration: none; color: #0A66C2;'>
+                #Gabriel Cordeiro
+                #<img src='https://upload.wikimedia.org/wikipedia/commons/f/f8/LinkedIn_icon_circle.svg' alt='LinkedIn' width='20' style='vertical-align: middle; margin-right: 5px;' />
+            #</a>
+        #</div>
+        #""",
+        #unsafe_allow_html=True
+    #)
