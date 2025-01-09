@@ -75,7 +75,7 @@ def buscar_colaboradores(id_emp):
         ON
             fz.Diretor_Gestor = lt.Nome
         WHERE
-            lt.id_emp = id_emp
+            lt.id_emp = id
         ORDER BY fz.Nome ASC;
     """
     # Passa o user_id como parâmetro para a consulta
