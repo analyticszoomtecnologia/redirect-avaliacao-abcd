@@ -58,7 +58,6 @@ def buscar_colaboradores():
     cursor.execute("""
         SELECT
           fz.id AS id_employee,
-          fz.Nome AS nm_employee,
           fz.Setor AS nm_departament,
           fz.Gestor_Direto AS nm_gestor,
           fz.Diretor_Gestor AS nm_diretor,
