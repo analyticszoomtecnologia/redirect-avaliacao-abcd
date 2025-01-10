@@ -190,7 +190,7 @@ def buscar_funcionarios_subordinados():
             cursor.execute(f"""
                 SELECT id, Nome, Setor, Gestor_Direto
                 FROM datalake.silver_pny.func_zoom
-                WHERE Diretor_Gestor = '{nome_gestor}'
+                WHERE Gestor_Direto = '{nome_gestor}' OR Diretor_Gestor = '{nome_gestor}'
             """)
             funcionarios = cursor.fetchall()
 
