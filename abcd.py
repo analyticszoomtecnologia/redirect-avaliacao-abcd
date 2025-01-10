@@ -424,34 +424,11 @@ def abcd_page():
     with cols_inputs2[1]:
         diretoria = st.text_input("Diretoria", value=colaboradores_data[nome_colaborador]['diretoria'] if nome_colaborador else "", disabled=True)
 
-    # Capturando o user_id do session_state
-    user_id = st.session_state.get('id_emp', None)
-
-    # Configurando o nome do diretor baseado no user_id
-    if user_id == 75:
-        diretor_responsavel = "Grasiele Bof"
-    elif user_id == 167:
-        diretor_responsavel = "Rodrigo S."
-    elif user_id == 14:
-        diretor_responsavel = "Aline Gomes"
-    elif user_id == 122:
-        diretor_responsavel = "Lúcio L."
-    else:
-        # Caso o user_id seja diferente, busque a informação do colaborador selecionado
-        diretor_responsavel = (
-            colaboradores_data[nome_colaborador]['diretor']
-            if nome_colaborador and nome_colaborador in colaboradores_data
-            else ""
-        )
-
     # Adicionando o campo do Diretor para exibir na tela
     with cols_inputs2[0]:
-        nome_diretor = st.text_input(
-            "Diretor(a) Responsável", 
-            value=diretor_responsavel, 
-            disabled=True
-        )
-        cols_date = st.columns([1, 3])
+        nome_diretor = st.text_input("Diretor(a) Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
+
+    cols_date = st.columns([1, 3])
 
     with cols_date[0]:
         data_resposta = st.date_input("Data da Resposta", value=datetime.today(), format="DD-MM-YYYY")
