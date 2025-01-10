@@ -433,15 +433,11 @@ def abcd_page():
         user_id = st.session_state.get('id_emp', None)
         name_user = cursor.execute("""
                 SELECT
-                    Diretor_Gestor AS nm_diretor
+                    Nome
                 FROM
                     datalake.silver_pny.func_zoom
                 WHERE
-                    Diretor_Gestor = (
-                        SELECT Diretor_Gestor
-                        FROM datalake.silver_pny.func_zoom
-                        WHERE id = %s
-                    )
+                   id = %s
         """ % (user_id))
         name_user = name_user.fetchone()
         cursor.close()
