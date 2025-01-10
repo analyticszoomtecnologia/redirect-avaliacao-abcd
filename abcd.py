@@ -430,19 +430,19 @@ def abcd_page():
         #nome_diretor = st.text_input("Diretor(a) Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
         user_id = st.session_state.get('id_emp', None)
         name_user = ''
-        if user_id == 75:
+        if user_id == '75':
             name_user = 'Grasiele Bof'
-        elif user_id == 122:
+        elif user_id == '122':
             name_user = 'Lúcio L.'
-        elif user_id == 126:
+        elif user_id == '126':
             name_user = 'Marcello'
-        elif user_id == 116:
+        elif user_id == '116':
             name_user = 'Lisiane'
-        elif user_id == 150:
+        elif user_id == '150':
             name_user = 'Nilton Jr.'
-        elif user_id in [14, 33, 167]:
+        elif user_id in ['14', '33', '167']:
             name_user = 'Rodrigo S.'
-        elif user_id in [49, 77]:
+        elif user_id in ['49', '77']:
             name_user = 'Guilherme Nunes'
         nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user, disabled=True)
 
