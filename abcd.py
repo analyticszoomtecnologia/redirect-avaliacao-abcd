@@ -493,8 +493,8 @@ def abcd_page():
                 atualizar_banco_dados(id_emp, nome_colaborador, nome_gestor, setor, diretoria, data_resposta, nota_final, soma_final, notas_categorias)
                 limpar_campos()
 
-    elif nome_colaborador:
-        st.error(f"O colaborador {nome_colaborador} não é subordinado ao gestor logado. Avaliação não permitida.")
+    #elif nome_colaborador:
+        #st.error(f"O colaborador {nome_colaborador} não é subordinado ao gestor logado. Avaliação não permitida.")
 
 
     # Lista de IDs de supervisores permitidos
