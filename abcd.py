@@ -433,68 +433,63 @@ def abcd_page():
     with cols_date[0]:
         data_resposta = st.date_input("Data da Resposta", value=datetime.today(), format="DD-MM-YYYY")
     
+    # Avaliação comportamental e técnica
+    notas_categorias = {}
 
-    # Verifica se o colaborador selecionado é subordinado do gestor logado
-    #if nome_colaborador and id_emp in subordinados_data:
-        # Avaliação comportamental e técnica
-        notas_categorias = {}
-
-        st.subheader("Comportamental")
-        for categoria in categorias_comportamental:
-            st.subheader(categoria)
-            cols = st.columns([5, 5, 5, 5, 5])
-
-            selected_nota = st.session_state.get(categoria)
-            for i, (nota, desc) in enumerate(descricoes_comportamental[categoria].items()):
-                with cols[i]:
-                    if st.button(f"{nota}\n\n{desc}", key=f"{categoria}_{nota}"):
-                        st.session_state[categoria] = nota
-                        st.success(f"Selecionado: {nota} para {categoria}")
-
-            if categoria == "Colaboração":
-                notas_categorias["colaboracao"] = st.session_state.get(categoria)
-            elif categoria == "Inteligência Emocional":
-                notas_categorias["inteligencia_emocional"] = st.session_state.get(categoria)
-            elif categoria == "Responsabilidade":
-                notas_categorias["responsabilidade"] = st.session_state.get(categoria)
-            elif categoria == "Iniciativa / Pró atividade":
-                notas_categorias["iniciativa_proatividade"] = st.session_state.get(categoria)
-            elif categoria == "Flexibilidade":
-                notas_categorias["flexibilidade"] = st.session_state.get(categoria)
-
-        st.subheader("Conhecimento Técnico")
+    st.subheader("Comportamental")
+    for categoria in categorias_comportamental:
+        st.subheader(categoria)
         cols = st.columns([5, 5, 5, 5, 5])
 
-        selected_nota = st.session_state.get(categoria_tecnica)
-        for i, (nota, desc) in enumerate(descricoes_tecnico.items()):
+        selected_nota = st.session_state.get(categoria)
+        for i, (nota, desc) in enumerate(descricoes_comportamental[categoria].items()):
             with cols[i]:
-                if st.button(f"{nota}\n\n{desc}", key=f"{categoria_tecnica}_{nota}"):
-                    st.session_state[categoria_tecnica] = nota
-                    st.success(f"Selecionado: {nota} para {categoria_tecnica}")
+                if st.button(f"{nota}\n\n{desc}", key=f"{categoria}_{nota}"):
+                    st.session_state[categoria] = nota
+                    st.success(f"Selecionado: {nota} para {categoria}")
 
-        notas_categorias["conhecimento_tecnico"] = st.session_state.get(categoria_tecnica)
+        if categoria == "Colaboração":
+            notas_categorias["colaboracao"] = st.session_state.get(categoria)
+        elif categoria == "Inteligência Emocional":
+            notas_categorias["inteligencia_emocional"] = st.session_state.get(categoria)
+        elif categoria == "Responsabilidade":
+            notas_categorias["responsabilidade"] = st.session_state.get(categoria)
+        elif categoria == "Iniciativa / Pró atividade":
+            notas_categorias["iniciativa_proatividade"] = st.session_state.get(categoria)
+        elif categoria == "Flexibilidade":
+            notas_categorias["flexibilidade"] = st.session_state.get(categoria)
 
-        # Botão para calcular e salvar no banco de dados
-        if st.button("Calcular Nota e Salvar"):
-            selecoes_comportamental = [st.session_state.get(categoria) for categoria in categorias_comportamental]
-            selecao_tecnico = st.session_state.get(categoria_tecnica)
+    st.subheader("Conhecimento Técnico")
+    cols = st.columns([5, 5, 5, 5, 5])
 
-            if None in selecoes_comportamental or not selecao_tecnico:
-                st.error("Você deve selecionar uma nota para todas as categorias antes de salvar.")
-            else:
-                nota_comportamental, nota_tecnico, soma_final = calcular_nota_final(selecoes_comportamental, selecao_tecnico)
-                nota_final = determinar_nota_final(soma_final)
+    selected_nota = st.session_state.get(categoria_tecnica)
+    for i, (nota, desc) in enumerate(descricoes_tecnico.items()):
+        with cols[i]:
+            if st.button(f"{nota}\n\n{desc}", key=f"{categoria_tecnica}_{nota}"):
+                st.session_state[categoria_tecnica] = nota
+                st.success(f"Selecionado: {nota} para {categoria_tecnica}")
 
-                st.write(f"Nota Comportamental: {nota_comportamental}")
-                st.write(f"Nota Técnica: {nota_tecnico}")
-                st.write(f"Soma Final: {soma_final}")
-                st.write(f"Nota Final: {nota_final}")
+    notas_categorias["conhecimento_tecnico"] = st.session_state.get(categoria_tecnica)
 
-                atualizar_banco_dados(id_emp, nome_colaborador, nome_gestor, setor, diretoria, data_resposta, nota_final, soma_final, notas_categorias)
-                limpar_campos()
+    # Botão para calcular e salvar no banco de dados
+    if st.button("Calcular Nota e Salvar"):
+        selecoes_comportamental = [st.session_state.get(categoria) for categoria in categorias_comportamental]
+        selecao_tecnico = st.session_state.get(categoria_tecnica)
 
-    #elif nome_colaborador:
-        #st.error(f"O colaborador {nome_colaborador} não é subordinado ao gestor logado. Avaliação não permitida.")
+        if None in selecoes_comportamental or not selecao_tecnico:
+            st.error("Você deve selecionar uma nota para todas as categorias antes de salvar.")
+        else:
+            nota_comportamental, nota_tecnico, soma_final = calcular_nota_final(selecoes_comportamental, selecao_tecnico)
+            nota_final = determinar_nota_final(soma_final)
+
+            st.write(f"Nota Comportamental: {nota_comportamental}")
+            st.write(f"Nota Técnica: {nota_tecnico}")
+            st.write(f"Soma Final: {soma_final}")
+            st.write(f"Nota Final: {nota_final}")
+
+            atualizar_banco_dados(id_emp, nome_colaborador, nome_gestor, setor, diretoria, data_resposta, nota_final, soma_final, notas_categorias)
+            limpar_campos()
+        
 
 
     # Lista de IDs de supervisores permitidos
