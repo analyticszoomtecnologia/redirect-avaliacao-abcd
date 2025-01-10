@@ -439,7 +439,7 @@ def abcd_page():
                 WHERE
                    id = %s
         """ % (user_id))
-        name_user = name_user.fetchone()
+        name_user = name_user.fetch()
         cursor.close()
         connection.close()
         nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user.get('Nome'), disabled=True)
