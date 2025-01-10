@@ -431,7 +431,7 @@ def abcd_page():
         connection = conectar_banco()
         cursor = connection.cursor()
         user_id = st.session_state.get('id_emp', None)
-        cursor.execute("""
+        name_user = cursor.execute("""
                 SELECT
                     Diretor_Gestor AS nm_diretor
                 FROM
@@ -442,11 +442,11 @@ def abcd_page():
                         FROM datalake.silver_pny.func_zoom
                         WHERE id = %s
                     )
-        """ % (user_id)) 
+        """ % (user_id))
         colaboradores = cursor.fetchall()
         cursor.close()
         connection.close()
-        nome_diretor = st.text_input("Diretor(a) Responsável", value=user_id, disabled=True)
+        nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user, disabled=True)
 
     cols_date = st.columns([1, 3])
 
