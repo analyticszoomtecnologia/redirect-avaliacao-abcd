@@ -443,10 +443,9 @@ def abcd_page():
                         WHERE id = %s
                     )
         """ % (user_id))
-        colaboradores = cursor.fetchall()
         cursor.close()
         connection.close()
-        nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user, disabled=True)
+        nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user.fetchall(), disabled=True)
 
     cols_date = st.columns([1, 3])
 
