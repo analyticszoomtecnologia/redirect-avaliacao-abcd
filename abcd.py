@@ -428,22 +428,22 @@ def abcd_page():
     # Adicionando o campo do Diretor para exibir na tela
     with cols_inputs2[0]:
         #nome_diretor = st.text_input("Diretor(a) Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
-        connection = conectar_banco()
-        cursor = connection.cursor()
         user_id = st.session_state.get('id_emp', None)
-        name_user = cursor.execute("""
-                SELECT
-                    Nome
-                FROM
-                    datalake.silver_pny.func_zoom
-                WHERE
-                   id = %s
-        """ % (user_id))
-        name_user = name_user.fetchall()
-        name_user = {'Nome': row['Nome'] for row in name_user}
-        cursor.close()
-        connection.close()
-        nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user['Nome'], disabled=True)
+        if user_id == 75:
+            name_user = 'Grasiele Bof'
+        elif user_id == 122:
+            name_user = 'Lúcio L.'
+        elif user_id == 126:
+            name_user = 'Marcello'
+        elif user_id == 116:
+            name_user = 'Lisiane'
+        elif user_id == 150:
+            name_user = 'Nilton Jr.'
+        elif user_id in [14, 33, 167]:
+            name_user = 'Rosrigo S.'
+        elif user_id in [49, 77]:
+            name_user = 'Guilherme Nunes'
+        nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user, disabled=True)
 
     cols_date = st.columns([1, 3])
 
