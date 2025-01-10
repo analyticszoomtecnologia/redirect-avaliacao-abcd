@@ -440,7 +440,7 @@ def abcd_page():
         elif user_id == 150:
             name_user = 'Nilton Jr.'
         elif user_id in [14, 33, 167]:
-            name_user = 'Rosrigo S.'
+            name_user = 'Rodrigo S.'
         elif user_id in [49, 77]:
             name_user = 'Guilherme Nunes'
         nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user, disabled=True)
