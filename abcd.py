@@ -442,7 +442,7 @@ def abcd_page():
         name_user = name_user.fetch()
         cursor.close()
         connection.close()
-        nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user.get('Nome'), disabled=True)
+        nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user, disabled=True)
 
     cols_date = st.columns([1, 3])
 
