@@ -402,6 +402,7 @@ def abcd_page():
     # Buscar colaboradores e subordinados
     colaboradores_data = buscar_colaboradores()
     subordinados_data = buscar_funcionarios_subordinados()
+    user_id = st.session_state.get('id_emp', None)
 
     # Inputs de informações do colaborador
     cols_inputs = st.columns(2)
@@ -426,7 +427,8 @@ def abcd_page():
 
     # Adicionando o campo do Diretor para exibir na tela
     with cols_inputs2[0]:
-        nome_diretor = st.text_input("Diretor(a) Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
+        #nome_diretor = st.text_input("Diretor(a) Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
+        nome_diretor = st.text_input("Diretor(a) Responsável", value=user_id if nome_colaborador else "", disabled=True)
 
     cols_date = st.columns([1, 3])
 
