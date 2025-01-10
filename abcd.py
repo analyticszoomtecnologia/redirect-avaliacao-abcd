@@ -426,7 +426,7 @@ def abcd_page():
 
     # Adicionando o campo do Diretor para exibir na tela
     with cols_inputs2[0]:
-        nome_diretor = st.text_input("Diretor Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
+        nome_diretor = st.text_input("Diretor(a) Responsável", value=colaboradores_data[nome_colaborador]['diretor'] if nome_colaborador else "", disabled=True)
 
     cols_date = st.columns([1, 3])
 
