@@ -431,17 +431,17 @@ def abcd_page():
         user_id = st.session_state.get('id_emp', None)
         if user_id == 75:
             name_user = 'Grasiele Bof'
-        elif user_id == 122:
+        if user_id == 122:
             name_user = 'Lúcio L.'
-        elif user_id == 126:
+        if user_id == 126:
             name_user = 'Marcello'
-        elif user_id == 116:
+        if user_id == 116:
             name_user = 'Lisiane'
-        elif user_id == 150:
+        if user_id == 150:
             name_user = 'Nilton Jr.'
-        elif user_id in [14, 33, 167]:
+        if user_id in [14, 33, 167]:
             name_user = 'Rodrigo S.'
-        elif user_id in [49, 77]:
+        if user_id in [49, 77]:
             name_user = 'Guilherme Nunes'
         nome_diretor = st.text_input("Diretor(a) Responsável", value=user_id, disabled=True)
 
