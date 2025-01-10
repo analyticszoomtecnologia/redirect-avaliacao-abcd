@@ -443,7 +443,7 @@ def abcd_page():
             name_user = 'Rodrigo S.'
         if user_id in [49, 77]:
             name_user = 'Guilherme Nunes'
-        nome_diretor = st.text_input("Diretor(a) Responsável", value=user_id, disabled=True)
+        nome_diretor = st.text_input("Diretor(a) Responsável", value=name_user, disabled=True)
 
     cols_date = st.columns([1, 3])
 
