@@ -623,16 +623,16 @@ id_emp = query_params.get("user_id", [None])[0]  # Usa `user_id` dos parâmetros
 
 # Verifique se o usuário está logado e se o token é válido
 if id_emp:
-    #if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
-        st.session_state['logged_in'] = True  # Defina o usuário como logado
-        st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
+    # if verificar_token_no_banco(id_emp):  # Usa `id_emp` diretamente
+    st.session_state['logged_in'] = True  # Defina o usuário como logado
+    st.session_state['id_emp'] = id_emp  # Armazena o id_emp no session state
 
-        
-        # Renderizar a página `abcd_page` se o token for válido
-        abcd_page()  # Chama a função abcd_page diretamente após a validação
+    
+    # Renderizar a página `abcd_page` se o token for válido
+    abcd_page()  # Chama a função abcd_page diretamente após a validação
 
-    else:
-        st.error("Acesso negado: token inválido ou expirado.")
+    # else:
+    #     st.error("Acesso negado: token inválido ou expirado.")
 else:
     st.error("ID de usuário não encontrado.")
 
