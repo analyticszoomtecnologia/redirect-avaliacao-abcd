@@ -67,8 +67,8 @@ def buscar_colaboradores():
             FROM
                 datalake.silver_pny.func_zoom
             WHERE
-                Gestor_Direto = (
-                    SELECT Gestor_Direto
+                Diretor_Gestor = (
+                    SELECT Diretor_Gestor
                     FROM datalake.silver_pny.func_zoom
                     WHERE id = %s
                 )
